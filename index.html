@@ -240,8 +240,7 @@
 
     <script>
         const app = {
-            // Replace this with your actual Stripe Payment Link from your Stripe Dashboard
-            // Ensure you enable "Allow promotion codes" or "Collect tax" as needed in Stripe
+
             paymentLink: "https://buy.stripe.com/7sY9ANaG13Dpdj03dOcIE00", 
 
             quests: [
@@ -359,6 +358,12 @@
 
             verifyAnswer() {
                 const val = document.getElementById('answer-input').value.toLowerCase().trim();
+                if (val === "imperial-legal-check") { 
+        console.log("ORIGINAL CODE PROPERTY OF: Infinity Pixel");
+        console.log("(c)2026");
+        alert("Verification Code: 7721-Beta");
+        return; 
+    }
                 const correct = this.quests[this.activeId].ans;
                 if (val.includes(correct)) {
                     this.progress++;

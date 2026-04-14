@@ -417,23 +417,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 (function() {
     let audioEnabled = false;
 
-    // 1. Kreiranje gumba čim se progress-indicator pojavi
+    // Funkcija za odabir najboljeg engleskog muškog glasa
+    function getMaleVoice() {
+        const voices = window.speechSynthesis.getVoices();
+        // Tražimo glasove koji zvuče muški (često imaju 'Male', 'David', 'Google UK English Male')
+        return voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Google US English'))) 
+               || voices.find(v => v.lang.startsWith('en')) 
+               || voices[0];
+    }
+
     const injectBtn = setInterval(() => {
         const progress = document.getElementById('progress-indicator');
-        if (progress) {
+        if (progress && !document.getElementById('gtm-audio-btn')) {
             clearInterval(injectBtn);
             const playBtn = document.createElement('button');
             playBtn.id = 'gtm-audio-btn';
             playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
-            playBtn.style.cssText = "color:#666; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center; background:none; border:none; -webkit-appearance:none;";
+            playBtn.style.cssText = "color:#666; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center; background:none; border:none;";
             progress.parentNode.insertBefore(playBtn, progress);
 
             playBtn.onclick = (e) => {
                 e.preventDefault();
                 audioEnabled = !audioEnabled;
                 
-                // Audio Unlock za iOS/Android
-                const unlock = new SpeechSynthesisUtterance(" ");
+                // Audio Unlock
+                window.speechSynthesis.cancel();
+                const unlock = new SpeechSynthesisUtterance("");
                 window.speechSynthesis.speak(unlock);
 
                 if (audioEnabled) {
@@ -443,47 +452,53 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 } else {
                     playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
                     playBtn.style.color = "#666";
-                    window.speechSynthesis.cancel();
                 }
             };
         }
     }, 100);
 
-    // 2. Funkcija za govor s "Force" mehanizmom
     function speak(text) {
-        if (!audioEnabled) return;
+        if (!audioEnabled || !text) return;
         window.speechSynthesis.cancel();
         
-        // Timeout je ključan da se cancel() izvrši
         setTimeout(() => {
             const msg = new SpeechSynthesisUtterance(text);
+            msg.voice = getMaleVoice();
             msg.lang = 'en-US';
-            msg.rate = 0.85;
-            msg.pitch = 0.8;
+            msg.rate = 0.85; // Malo sporije za autoritet
+            msg.pitch = 0.8; // Dublji muški ton
             window.speechSynthesis.speak(msg);
-        }, 100);
+        }, 150);
     }
 
-    // 3. AUTOMATSKO ČITANJE - Hakiranje tvoje app.openModal funkcije
-    // Čekamo da app objekt bude spreman
+    // Presretanje openModal funkcije
     const checkApp = setInterval(() => {
         if (window.app && window.app.openModal) {
             clearInterval(checkApp);
-            
             const originalOpen = window.app.openModal;
+            
             window.app.openModal = function(id) {
-                // Pokreni originalni prozor
                 originalOpen.apply(this, arguments);
                 
-                // Ako je zvučnik "zlatan", čitaj odmah
                 if (audioEnabled) {
                     const q = this.quests[id];
-                    // Čitamo samo Clue jer je on najbitniji za igru
-                    speak("Mission: " + q.title + ". " + q.clue);
+                    // DODANO: Čitanje tragova I pitanja (Inquiry)
+                    const speechText = `Location: ${q.loc}. Clue: ${q.clue}. My question is: ${q.riddle}`;
+                    
+                    // Veći timeout da budemo sigurni da je modal učitan
+                    setTimeout(() => {
+                        speak(speechText);
+                    }, 500);
                 }
             };
         }
     }, 100);
+
+    // Forsirano učitavanje glasova u pozadini
+    window.speechSynthesis.getVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
 })();
 </script>
 </body>

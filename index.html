@@ -411,6 +411,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         };
 
         window.onload = () => app.init();
+        // Direktan upis u tvoj kod (Hardcoded)
+const audioInterval = setInterval(() => {
+    const progress = document.getElementById('progress-indicator');
+    if (progress && !document.getElementById('gtm-audio-btn')) {
+        const playBtn = document.createElement('button');
+        playBtn.id = 'gtm-audio-btn';
+        playBtn.innerHTML = '<i class="fa-solid fa-circle-play"></i>';
+        playBtn.style.cssText = "color:#ca8a04; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center;";
+        progress.parentNode.insertBefore(playBtn, progress);
+        
+        playBtn.onclick = () => {
+            window.speechSynthesis.cancel();
+            const isHidden = document.getElementById('task-modal').classList.contains('hidden');
+            const text = isHidden ? "Soldier, choose a mission." : "Quest: " + document.getElementById('modal-title').innerText + ". " + document.getElementById('modal-desc').innerText;
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'en-US';
+            window.speechSynthesis.speak(msg);
+        };
+        clearInterval(audioInterval);
+    }
+}, 1000);
     </script>
 </body>
 </html>

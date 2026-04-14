@@ -414,14 +414,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         (function() {
     let audioEnabled = false;
 
-    // 1. Inicijalizacija gumba u headeru
+    // 1. "Warming up" the voices - nužno za Chrome/Safari
+    window.speechSynthesis.getVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    }
+
     const audioInterval = setInterval(() => {
         const progress = document.getElementById('progress-indicator');
         if (progress && !document.getElementById('gtm-audio-btn')) {
             const playBtn = document.createElement('button');
             playBtn.id = 'gtm-audio-btn';
             playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
-            playBtn.style.cssText = "color:#666; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center; transition: all 0.3s; background:none; border:none;";
+            playBtn.style.cssText = "color:#666; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center; background:none; border:none;";
             progress.parentNode.insertBefore(playBtn, progress);
             
             playBtn.onclick = (e) => {
@@ -432,12 +437,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                     playBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
                     playBtn.style.color = "#ca8a04";
                     
-                    // KRITIČNO: "Otključavanje" audia na iOS/Android
-                    // Puštamo tišinu da preglednik odobri kanal
-                    const v = new SpeechSynthesisUtterance("");
-                    window.speechSynthesis.speak(v);
-                    
-                    speak("Audio guide active.");
+                    // Kratki testni zvuk za aktivaciju kanala
+                    const welcome = new SpeechSynthesisUtterance("Audio guide active");
+                    welcome.rate = 0.9;
+                    window.speechSynthesis.speak(welcome);
                 } else {
                     playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
                     playBtn.style.color = "#666";
@@ -448,39 +451,36 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         }
     }, 500);
 
-    // 2. Poboljšana funkcija govora
     function speak(text) {
-        if (!audioEnabled || !text) return;
+        if (!audioEnabled) return;
         
-        // Zaustavi sve što se trenutno priča
         window.speechSynthesis.cancel();
         
-        const msg = new SpeechSynthesisUtterance(text);
-        
-        // Postavke za cara Dioklecijana
-        msg.lang = 'en-US'; 
-        msg.rate = 0.85;
-        msg.pitch = 0.7;
+        // Timeout osigurava da cancel() odradi svoje prije novog govora
+        setTimeout(() => {
+            const msg = new SpeechSynthesisUtterance(text);
+            const voices = window.speechSynthesis.getVoices();
+            
+            // Pokušaj postaviti muški glas ako postoji, inače default
+            msg.voice = voices.find(v => v.name.includes('Google US English')) || voices[0];
+            msg.lang = 'en-US';
+            msg.rate = 0.85;
+            msg.pitch = 0.8;
+            msg.volume = 1;
 
-        // Force start
-        window.speechSynthesis.speak(msg);
+            window.speechSynthesis.speak(msg);
+        }, 50);
     }
 
-    // 3. Spajanje na tvoju postojeću funkciju
     const originalOpenModal = app.openModal;
     app.openModal = function(id) {
-        // Izvrši originalni prikaz modala
         originalOpenModal.apply(this, arguments);
         
-        // Ako je audio ON, pročitaj sadržaj odmah
         if (audioEnabled) {
-            const quest = this.quests[id];
-            const speechText = "Location: " + quest.loc + ". Mission: " + quest.title + ". Clue: " + quest.clue;
-            
-            // Mala pauza da se UI stigne promijeniti
-            setTimeout(() => {
-                speak(speechText);
-            }, 200);
+            const q = this.quests[id];
+            // Čitamo lokaciju i trag
+            const speechText = q.loc + ". " + q.clue;
+            speak(speechText);
         }
     };
 })();

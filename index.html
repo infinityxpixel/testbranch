@@ -411,27 +411,79 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         };
 
         window.onload = () => app.init();
-        // Direktan upis u tvoj kod (Hardcoded)
-const audioInterval = setInterval(() => {
-    const progress = document.getElementById('progress-indicator');
-    if (progress && !document.getElementById('gtm-audio-btn')) {
-        const playBtn = document.createElement('button');
-        playBtn.id = 'gtm-audio-btn';
-        playBtn.innerHTML = '<i class="fa-solid fa-circle-play"></i>';
-        playBtn.style.cssText = "color:#ca8a04; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center;";
-        progress.parentNode.insertBefore(playBtn, progress);
+        (function() {
+    let audioEnabled = false;
+
+    // 1. Inicijalizacija gumba u headeru
+    const audioInterval = setInterval(() => {
+        const progress = document.getElementById('progress-indicator');
+        if (progress && !document.getElementById('gtm-audio-btn')) {
+            const playBtn = document.createElement('button');
+            playBtn.id = 'gtm-audio-btn';
+            playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+            playBtn.style.cssText = "color:#666; font-size:20px; cursor:pointer; margin:0 10px; display:flex; align-items:center; transition: all 0.3s; background:none; border:none;";
+            progress.parentNode.insertBefore(playBtn, progress);
+            
+            playBtn.onclick = (e) => {
+                e.preventDefault();
+                audioEnabled = !audioEnabled;
+                
+                if (audioEnabled) {
+                    playBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
+                    playBtn.style.color = "#ca8a04";
+                    
+                    // KRITIČNO: "Otključavanje" audia na iOS/Android
+                    // Puštamo tišinu da preglednik odobri kanal
+                    const v = new SpeechSynthesisUtterance("");
+                    window.speechSynthesis.speak(v);
+                    
+                    speak("Audio guide active.");
+                } else {
+                    playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
+                    playBtn.style.color = "#666";
+                    window.speechSynthesis.cancel();
+                }
+            };
+            clearInterval(audioInterval);
+        }
+    }, 500);
+
+    // 2. Poboljšana funkcija govora
+    function speak(text) {
+        if (!audioEnabled || !text) return;
         
-        playBtn.onclick = () => {
-            window.speechSynthesis.cancel();
-            const isHidden = document.getElementById('task-modal').classList.contains('hidden');
-            const text = isHidden ? "Soldier, choose a mission." : "Quest: " + document.getElementById('modal-title').innerText + ". " + document.getElementById('modal-desc').innerText;
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'en-US';
-            window.speechSynthesis.speak(msg);
-        };
-        clearInterval(audioInterval);
+        // Zaustavi sve što se trenutno priča
+        window.speechSynthesis.cancel();
+        
+        const msg = new SpeechSynthesisUtterance(text);
+        
+        // Postavke za cara Dioklecijana
+        msg.lang = 'en-US'; 
+        msg.rate = 0.85;
+        msg.pitch = 0.7;
+
+        // Force start
+        window.speechSynthesis.speak(msg);
     }
-}, 1000);
+
+    // 3. Spajanje na tvoju postojeću funkciju
+    const originalOpenModal = app.openModal;
+    app.openModal = function(id) {
+        // Izvrši originalni prikaz modala
+        originalOpenModal.apply(this, arguments);
+        
+        // Ako je audio ON, pročitaj sadržaj odmah
+        if (audioEnabled) {
+            const quest = this.quests[id];
+            const speechText = "Location: " + quest.loc + ". Mission: " + quest.title + ". Clue: " + quest.clue;
+            
+            // Mala pauza da se UI stigne promijeniti
+            setTimeout(() => {
+                speak(speechText);
+            }, 200);
+        }
+    };
+})();
     </script>
 </body>
 </html>

@@ -417,15 +417,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 (function() {
     let audioEnabled = false;
 
-    // Funkcija za odabir najboljeg engleskog muškog glasa
-    function getMaleVoice() {
-        const voices = window.speechSynthesis.getVoices();
-        // Tražimo glasove koji zvuče muški (često imaju 'Male', 'David', 'Google UK English Male')
-        return voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Google US English'))) 
-               || voices.find(v => v.lang.startsWith('en')) 
-               || voices[0];
-    }
-
     const injectBtn = setInterval(() => {
         const progress = document.getElementById('progress-indicator');
         if (progress && !document.getElementById('gtm-audio-btn')) {
@@ -440,61 +431,76 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 e.preventDefault();
                 audioEnabled = !audioEnabled;
                 
-                // Audio Unlock
-                window.speechSynthesis.cancel();
-                const unlock = new SpeechSynthesisUtterance("");
-                window.speechSynthesis.speak(unlock);
-
                 if (audioEnabled) {
                     playBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i>';
                     playBtn.style.color = "#ca8a04";
-                    speak("Audio guide active");
+                    
+                    // Unlock audio channel with a short phrase
+                    const unlock = new SpeechSynthesisUtterance("Audio guide active");
+                    configureUtterance(unlock);
+                    window.speechSynthesis.speak(unlock);
                 } else {
                     playBtn.innerHTML = '<i class="fa-solid fa-volume-xmark"></i>';
                     playBtn.style.color = "#666";
+                    window.speechSynthesis.cancel();
                 }
             };
         }
     }, 100);
 
-    function speak(text) {
-        if (!audioEnabled || !text) return;
-        window.speechSynthesis.cancel();
+    // Funkcija koja postavlja "carski" muški ton
+    function configureUtterance(msg) {
+        const voices = window.speechSynthesis.getVoices();
         
-        setTimeout(() => {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.voice = getMaleVoice();
-            msg.lang = 'en-US';
-            msg.rate = 0.85; // Malo sporije za autoritet
-            msg.pitch = 0.8; // Dublji muški ton
-            window.speechSynthesis.speak(msg);
-        }, 150);
+        // Tražimo bilo koji glas koji sadrži "Male", "David", "Google UK", "Microsoft Stefan"
+        const maleVoice = voices.find(v => v.lang.startsWith('en') && 
+            (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Guy') || v.name.includes('James'))) 
+            || voices.find(v => v.lang.startsWith('en'));
+
+        if (maleVoice) msg.voice = maleVoice;
+        
+        msg.lang = 'en-US';
+        msg.rate = 0.8;  // Sporiji, ozbiljniji govor
+        msg.pitch = 0.5; // Jako niski pitch da OSIGURAMO muški bariton, čak i na ženskom glasu
+        msg.volume = 1;
     }
 
-    // Presretanje openModal funkcije
+    function speak(text) {
+        if (!audioEnabled || !text) return;
+        
+        // Ne koristimo cancel() ovdje da ne prekinemo "Audio guide active"
+        const msg = new SpeechSynthesisUtterance(text);
+        configureUtterance(msg);
+        window.speechSynthesis.speak(msg);
+    }
+
     const checkApp = setInterval(() => {
         if (window.app && window.app.openModal) {
             clearInterval(checkApp);
-            const originalOpen = window.app.openModal;
+            const originalOpen = window.app.appOpenModal || window.app.openModal;
             
             window.app.openModal = function(id) {
                 originalOpen.apply(this, arguments);
                 
                 if (audioEnabled) {
                     const q = this.quests[id];
-                    // DODANO: Čitanje tragova I pitanja (Inquiry)
-                    const speechText = `Location: ${q.loc}. Clue: ${q.clue}. My question is: ${q.riddle}`;
+                    // Redoslijed čitanja: Naslov -> Opis -> PITANJE (Riddle)
+                    const part1 = `Mission: ${q.title}.`;
+                    const part2 = `${q.clue}`;
+                    const part3 = `My inquiry is: ${q.riddle}`;
                     
-                    // Veći timeout da budemo sigurni da je modal učitan
+                    // Šaljemo u dijelovima radi bolje stabilnosti na mobilnim uređajima
                     setTimeout(() => {
-                        speak(speechText);
-                    }, 500);
+                        speak(part1);
+                        speak(part2);
+                        speak(part3);
+                    }, 600);
                 }
             };
         }
-    }, 100);
+    }, 200);
 
-    // Forsirano učitavanje glasova u pozadini
+    // Pre-fetch voices
     window.speechSynthesis.getVoices();
     if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();

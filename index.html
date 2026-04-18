@@ -4,15 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Split Quest: Digital Geocache</title>
+    <title>Zagreb Quest: Digital Geocache</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         
         :root {
-            --primary: #0ea5e9;
+            --primary: #2563eb;
             --success: #10b981;
-            --bg: #070a13;
+            --bg: #0a0c14;
         }
 
         body {
@@ -23,141 +23,135 @@
         }
 
         .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px;
         }
 
-        .premium-lock {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .premium-lock::after {
-            content: "PREMIUM";
-            position: absolute;
-            top: 10px;
-            right: -25px;
-            background: #f59e0b;
-            color: black;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 2px 30px;
-            transform: rotate(45deg);
+        .premium-lock-tag {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            color: #000;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
         }
 
         .pulse-active {
             animation: pulse-ring 2s infinite;
-            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
         }
 
         .btn-gradient {
-            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transition: all 0.2s ease;
         }
 
-        .modal-enter { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-gradient:active { transform: scale(0.97); }
+
+        .modal-enter { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="min-h-screen pb-10">
 
-    <!-- Navbar -->
-    <nav class="p-6 flex justify-between items-center">
+    <!-- Header -->
+    <nav class="p-6 flex justify-between items-center bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md">
         <div>
-            <h1 class="text-2xl font-black text-white tracking-tighter italic">SPLIT QUEST</h1>
-            <div id="gps-status" class="text-[10px] text-slate-500 font-mono">GPS: DISCONNECTED</div>
+            <h1 class="text-2xl font-black text-white tracking-tighter uppercase">Zagreb Quest</h1>
+            <div id="gps-status" class="text-[10px] text-blue-400 font-mono font-bold tracking-widest">GPS: INITIALIZING...</div>
         </div>
         <div id="pay-status-badge" class="px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-400">
-            FREE VERSION
+            LOADING...
         </div>
     </nav>
 
-    <!-- Main View -->
-    <main class="px-5 space-y-6">
+    <!-- Content Area -->
+    <main class="px-5 mt-6 space-y-6 max-w-lg mx-auto">
         
-        <!-- Active Tracker -->
-        <section id="tracker-box" class="glass-card p-6 border-sky-500/20 border">
-            <h2 id="target-name" class="text-xl font-bold text-sky-400">Select a Location</h2>
-            <p id="target-hint" class="text-slate-400 text-sm mt-1">First mission (Peristil) is free to play!</p>
+        <!-- Active Target Panel -->
+        <section id="tracker-box" class="glass-card p-6 border-blue-500/30 border-2 overflow-hidden">
+            <h2 id="target-name" class="text-xl font-bold text-white">Choose your path</h2>
+            <p id="target-hint" class="text-slate-400 text-sm mt-1 italic">Lotrščak Tower is your first free mission.</p>
             
-            <div id="meter-ui" class="mt-6 hidden">
-                <div class="flex justify-between items-end mb-2">
-                    <span class="text-3xl font-mono font-black text-white" id="dist-val">---m</span>
-                    <span class="text-xs text-slate-500 mb-1">PROXIMITY</span>
+            <div id="meter-ui" class="mt-8 hidden">
+                <div class="flex justify-between items-end mb-3">
+                    <span class="text-4xl font-mono font-black text-white" id="dist-val">---m</span>
+                    <span class="text-[10px] text-blue-400 font-bold tracking-widest mb-1">TO TARGET</span>
                 </div>
-                <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-                    <div id="dist-bar" class="h-full bg-sky-500 transition-all duration-300" style="width: 0%"></div>
+                <div class="w-full h-4 bg-slate-900 rounded-full p-1 border border-white/5">
+                    <div id="dist-bar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
                 </div>
+                <p class="text-[10px] text-center mt-3 text-slate-500">Get within 20 meters to unlock the story.</p>
             </div>
         </section>
 
-        <!-- Location List -->
+        <!-- Location Selection -->
         <section class="space-y-3" id="location-list">
             <!-- Locations injected here -->
         </section>
 
-        <!-- Paywall (Hidden by default) -->
-        <section id="paywall-card" class="glass-card p-8 text-center border-amber-500/30 border hidden">
-            <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        <!-- Premium Paywall -->
+        <section id="paywall-card" class="glass-card p-8 text-center border-amber-500/40 border-2 hidden bg-amber-950/10">
+            <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
+                  <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold mb-2">Unlock Full Quest</h3>
-            <p class="text-slate-400 text-sm mb-6">Unlock all 4 coastal locations including Bačvice and Kašjuni for only €4.99.</p>
-            <!-- REPLACE THIS LINK WITH YOUR STRIPE PAYMENT LINK -->
-            <a href="https://buy.stripe.com/YOUR_ACTUAL_STRIPE_LINK" class="block w-full py-4 rounded-xl btn-gradient font-bold uppercase tracking-widest text-sm shadow-lg shadow-blue-500/20">
-                Unlock Everything
+            <h3 class="text-2xl font-black mb-2 uppercase tracking-tight">Expand the City</h3>
+            <p class="text-slate-300 text-sm mb-6 leading-relaxed">The tour doesn't end in the Upper Town. Unlock 4 more iconic Zagreb locations across the city.</p>
+            <!-- REPLACE THIS WITH YOUR STRIPE PAYMENT LINK -->
+            <a href="https://buy.stripe.com/YOUR_ZAGREB_STRIPE_LINK" class="block w-full py-4 rounded-xl btn-gradient font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-600/30">
+                Unlock Zagreb Full Quest
             </a>
+            <p class="text-[10px] text-slate-500 mt-4 italic">One-time purchase. Permanent access.</p>
         </section>
     </main>
 
-    <!-- Modal for Content -->
-    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
-        <div class="absolute inset-0 bg-black/90" onclick="closeModal()"></div>
-        <div class="glass-card w-full max-w-sm p-8 relative modal-enter">
-            <div id="modal-icon" class="mb-4"></div>
-            <h3 id="modal-title" class="text-2xl font-black mb-4"></h3>
-            <p id="modal-body" class="text-slate-300 leading-relaxed mb-8"></p>
-            <button onclick="closeModal()" class="w-full py-4 rounded-xl bg-slate-700 font-bold">CLOSE</button>
+    <!-- UI Modal -->
+    <div id="modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="glass-card w-full max-w-sm p-8 relative modal-enter bg-slate-900 border-white/20">
+            <div id="modal-icon" class="text-4xl mb-4"></div>
+            <h3 id="modal-title" class="text-2xl font-black mb-4 leading-tight"></h3>
+            <div id="modal-body" class="text-slate-300 leading-relaxed text-sm overflow-y-auto max-h-60 pr-2"></div>
+            <button onclick="closeModal()" class="mt-8 w-full py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest text-xs">Back to Map</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION
-        const STRIPE_LINK = "https://buy.stripe.com/test_demo_link"; // Change this
-        const PROXIMITY_THRESHOLD = 20; 
+        // CONFIG
+        const THRESHOLD = 20; 
 
         const LOCATIONS = [
-            { id: 'peristil', isPremium: false, name: 'Peristil', lat: 43.5083, lng: 16.4402, hint: 'Inside the Palace heart', story: 'You are standing in the Peristyle. Built 1,700 years ago, this square was designed so the Roman subjects could bow to Emperor Diocletian as he appeared in the Prothyron. The Egyptian Sphinx here was already 1,500 years old when the Romans brought it here!' },
-            { id: 'bacvice', isPremium: true, name: 'Bačvice', lat: 43.5027, lng: 16.4485, hint: 'The home of Picigin', story: 'Welcome to the most famous beach in Split. The game of Picigin was born here in 1908. It is a game of zero points and maximum effort—the only goal is to keep the ball dry and make spectacular leaps into the shallow water.' },
-            { id: 'jezinac', isPremium: true, name: 'Ježinac', lat: 43.5021, lng: 16.4257, hint: 'The Hidden Cove', story: 'A tranquil spot far from the crowds. This area features the Mestrovic Castilac, where Croatia\'s greatest sculptor turned a ruined estate into a temple of wooden reliefs and spiritual peace.' },
-            { id: 'zvoncac', isPremium: true, name: 'Zvončac', lat: 43.5028, lng: 16.4294, hint: 'The West Coast Green', story: 'Zvončac park is the gateway to Marjan hill. During the summer, this park is the social hub for youth, offering incredible views of the yachts entering the harbor and the nearby islands.' },
-            { id: 'kasjuni', isPremium: true, name: 'Kašjuni', lat: 43.5036, lng: 16.3948, hint: 'The Marjan Cliffs', story: 'One of Split\'s most photogenic beaches. Tucked directly under the steep cliffs of Marjan, it offers a dramatic Mediterranean landscape that feels worlds away from the city center.' }
+            { id: 'lotrscak', isPremium: false, name: 'Lotrščak Tower', lat: 45.8143, lng: 15.9734, hint: 'Listen for the noon cannon', story: 'You are standing beneath the Lotrščak Tower, one of the best-preserved structures of the city\'s 13th-century defensive system. Every single day for over 140 years, the Grič cannon has been fired from this window at exactly noon. Legends say it saved the city from the Turks by hitting a rooster being carried to the Pasha\'s tent!' },
+            { id: 'cathedral', isPremium: true, name: 'Zagreb Cathedral', lat: 45.8144, lng: 15.9791, hint: 'Find the twin spires', story: 'The Cathedral of the Assumption of the Blessed Virgin Mary is the tallest building in Croatia. Its neo-Gothic spires define the city skyline. Look closely at the walls - you can still see the old fortifications built to defend against the Ottoman Empire.' },
+            { id: 'jelacic', isPremium: true, name: 'Ban Jelačić Square', lat: 45.8130, lng: 15.9772, hint: 'Meet me "under the tail"', story: 'The main pulse of Zagreb. The statue of Ban Josip Jelačić once faced north toward Hungary in a gesture of defiance, but today it is the city\'s most popular meeting point. Just below the surface flows the Medveščak stream, which fueled the city\'s earliest mills.' },
+            { id: 'zrinjevac', isPremium: true, name: 'Zrinjevac Park', lat: 45.8094, lng: 15.9781, hint: 'The Green Horseshoe', story: 'A masterpiece of urban planning. This park features an 18th-century music pavilion and a famous meteorological column. It is the first of seven squares that form the "Lenuci Horseshoe," a green belt that keeps Zagreb breathing.' },
+            { id: 'maksimir', isPremium: true, name: 'Maksimir Park', lat: 45.8233, lng: 16.0203, hint: 'The city\'s oldest forest', story: 'Founded in 1794, Maksimir was the first public park in South-Eastern Europe. It was designed in the English landscape style, meant to look like a natural forest. It remains a sanctuary for locals and the home of the city zoo.' }
         ];
 
         // STATE
-        let isUnlocked = localStorage.getItem('quest_premium') === 'true';
-        let completed = JSON.parse(localStorage.getItem('quest_done') || '[]');
+        let isUnlocked = localStorage.getItem('quest_premium_zg') === 'true';
+        let completed = JSON.parse(localStorage.getItem('quest_done_zg') || '[]');
         let activeId = null;
         let userCoords = null;
 
-        // INITIALIZE
         function init() {
-            // Check for Stripe success redirect
+            // Check success param
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('success') === 'true') {
                 isUnlocked = true;
-                localStorage.setItem('quest_premium', 'true');
-                showModal("Payment Confirmed", "Welcome to the full experience! All locations are now unlocked. Happy hunting!", "🎉");
-                // Clean URL
+                localStorage.setItem('quest_premium_zg', 'true');
+                showModal("Purchase Successful!", "Welcome to the full Zagreb Quest. Explore all landmarks and discover the city's deepest secrets.", "🏰");
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
@@ -170,24 +164,23 @@
             const paywall = document.getElementById('paywall-card');
             const badge = document.getElementById('pay-status-badge');
             
-            list.innerHTML = '';
-            
-            badge.innerText = isUnlocked ? "PREMIUM ACTIVE" : "FREE VERSION";
-            badge.className = isUnlocked ? "px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500 text-emerald-500" : "px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-400";
+            badge.innerText = isUnlocked ? "FULL ACCESS" : "STARTER PACK";
+            badge.className = isUnlocked ? "px-3 py-1 rounded-full text-[10px] font-bold border border-blue-500 text-blue-500" : "px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-500";
 
+            list.innerHTML = '';
             LOCATIONS.forEach(loc => {
                 const isLocked = loc.isPremium && !isUnlocked;
                 const isDone = completed.includes(loc.id);
                 const isActive = activeId === loc.id;
 
-                const el = document.createElement('div');
-                el.className = `glass-card p-4 flex justify-between items-center transition-all ${isLocked ? 'opacity-50 grayscale' : 'cursor-pointer'} ${isActive ? 'border-sky-500 border-2 pulse-active' : ''}`;
+                const card = document.createElement('div');
+                card.className = `glass-card p-5 flex justify-between items-center transition-all ${isLocked ? 'opacity-40' : 'cursor-pointer active:scale-95'} ${isActive ? 'ring-2 ring-blue-500 pulse-active' : ''}`;
                 
-                el.onclick = () => {
+                card.onclick = () => {
                     if (isLocked) {
                         paywall.scrollIntoView({ behavior: 'smooth' });
                         paywall.classList.add('pulse-active');
-                        setTimeout(() => paywall.classList.remove('pulse-active'), 2000);
+                        setTimeout(() => paywall.classList.remove('pulse-active'), 1000);
                     } else if (isDone) {
                         showModal(loc.name, loc.story, "📖");
                     } else {
@@ -195,26 +188,25 @@
                     }
                 };
 
-                el.innerHTML = `
+                card.innerHTML = `
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${isDone ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-500'}">
-                            ${isDone ? '✓' : '📍'}
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center ${isDone ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500'} font-bold">
+                            ${isDone ? '✓' : (isActive ? '🎯' : '📍')}
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm ${isLocked ? 'text-slate-500' : 'text-white'}">${loc.name}</h4>
-                            <p class="text-[10px] text-slate-500 uppercase">${isLocked ? 'Locked' : loc.hint}</p>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-sm text-white">${loc.name}</h4>
+                                ${isLocked ? '<span class="premium-lock-tag">Locked</span>' : ''}
+                            </div>
+                            <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">${isDone ? 'History Unlocked' : loc.hint}</p>
                         </div>
                     </div>
-                    ${isLocked ? '🔒' : ''}
                 `;
-                list.appendChild(el);
+                list.appendChild(card);
             });
 
-            // Show paywall if first task is done and not unlocked
-            if (completed.includes('peristil') && !isUnlocked) {
+            if (completed.includes('lotrscak') && !isUnlocked) {
                 paywall.classList.remove('hidden');
-            } else {
-                paywall.classList.add('hidden');
             }
         }
 
@@ -222,7 +214,7 @@
             activeId = id;
             const loc = LOCATIONS.find(l => l.id === id);
             document.getElementById('target-name').innerText = loc.name;
-            document.getElementById('target-hint').innerText = "Navigate within 20m of " + loc.name;
+            document.getElementById('target-hint').innerText = "Navigate to the site";
             document.getElementById('meter-ui').classList.remove('hidden');
             renderUI();
             updateDistance();
@@ -236,7 +228,7 @@
                     document.getElementById('gps-status').innerText = `GPS: ACCURACY ±${Math.round(pos.coords.accuracy)}M`;
                     updateDistance();
                 },
-                (err) => { document.getElementById('gps-status').innerText = "GPS ERROR: ENABLE PERMISSIONS"; },
+                (err) => { document.getElementById('gps-status').innerText = "GPS: SIGNAL LOST (ENABLE PERMISSIONS)"; },
                 { enableHighAccuracy: true }
             );
         }
@@ -244,15 +236,14 @@
         function updateDistance() {
             if (!userCoords || !activeId) return;
             const target = LOCATIONS.find(l => l.id === activeId);
-            const dist = haversine(userCoords.lat, userCoords.lng, target.lat, target.lng);
+            const dist = getDistance(userCoords.lat, userCoords.lng, target.lat, target.lng);
             
             document.getElementById('dist-val').innerText = `${Math.round(dist)}m`;
             
-            // Progress bar (full at 200m or closer)
-            const progress = Math.max(5, Math.min(100, 100 - (dist / 5)));
+            const progress = Math.max(5, Math.min(100, 100 - (dist / 10))); // Scale 0-1km
             document.getElementById('dist-bar').style.width = `${progress}%`;
 
-            if (dist <= PROXIMITY_THRESHOLD) {
+            if (dist <= THRESHOLD) {
                 completeMission(activeId);
             }
         }
@@ -260,18 +251,18 @@
         function completeMission(id) {
             if (!completed.includes(id)) {
                 completed.push(id);
-                localStorage.setItem('quest_done', JSON.stringify(completed));
+                localStorage.setItem('quest_done_zg', JSON.stringify(completed));
                 const loc = LOCATIONS.find(l => l.id === id);
-                showModal(loc.name, loc.story, "🎉 MISSION COMPLETE");
+                showModal(loc.name, loc.story, "🏆 MISSION ACCOMPLISHED");
                 activeId = null;
                 document.getElementById('meter-ui').classList.add('hidden');
-                document.getElementById('target-name').innerText = "Mission Accomplished!";
-                document.getElementById('target-hint').innerText = "Select your next destination.";
+                document.getElementById('target-name').innerText = "Where to next?";
+                document.getElementById('target-hint').innerText = "Select another landmark to explore.";
                 renderUI();
             }
         }
 
-        function haversine(lat1, lon1, lat2, lon2) {
+        function getDistance(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
             const dLat = (lat2-lat1)*Math.PI/180;
             const dLon = (lon2-lon1)*Math.PI/180;

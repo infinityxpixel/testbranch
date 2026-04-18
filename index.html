@@ -1,553 +1,411 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-M9HZM3X5');</script>
-<!-- End Google Tag Manager -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinity Pixel - IT Solutions</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='25' y='25' width='50' height='50' fill='white' rx='5'/></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+```react
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { 
+  LucideMousePointer2, 
+  LucideCode, 
+  LucideZap, 
+  LucideSparkles, 
+  LucideMail, 
+  LucideGamepad2,
+  LucideCrosshair,
+  LucideDna,
+  LucideGlobe,
+  LucideMaximize2
+} from 'lucide-react';
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
-            color: #ececec;
-            margin: 0;
-            overflow-x: hidden;
-            cursor: auto;
+/**
+ * INFINITY PIXEL v2.0 - Monochrome Futuristic Redesign
+ * A high-fidelity, brutalist digital studio interface.
+ */
+
+const PRISM_COLORS = ['#ffffff', '#333333', '#666666', '#33ff77']; // High contrast monochrome + accent green
+
+const App = () => {
+  const [isDestroying, setIsDestroying] = useState(false);
+  const [isTargeting, setIsTargeting] = useState(false);
+  const [targetRect, setTargetRect] = useState(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(-1);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  
+  const canvasRef = useRef(null);
+  const particles = useRef([]);
+  const scannerLines = useRef([]);
+  const cubeRef = useRef(null);
+  const requestRef = useRef();
+
+  // --- Core Systems ---
+  class Particle {
+    constructor(x, y, color, speedMult = 1) {
+      this.x = x;
+      this.y = y;
+      this.size = Math.random() * 2 + 0.5;
+      this.speedX = (Math.random() - 0.5) * 3 * speedMult;
+      this.speedY = (Math.random() - 0.5) * 3 * speedMult;
+      this.color = color;
+      this.life = 1.0;
+      this.decay = Math.random() * 0.03 + 0.01;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      this.life -= this.decay;
+    }
+    draw(ctx) {
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = Math.max(0, this.life);
+      ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+  }
+
+  const animate = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Particle update
+    particles.current.forEach((p, i) => {
+      p.update();
+      p.draw(ctx);
+      if (p.life <= 0) particles.current.splice(i, 1);
+    });
+
+    // Scanner Grid Background
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 0.5;
+    const spacing = 60;
+    for (let x = 0; x < canvas.width; x += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += spacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    requestRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    requestRef.current = requestAnimationFrame(animate);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(requestRef.current);
+    };
+  }, [animate]);
+
+  const createLaser = (startX, startY, endX, endY, type = 'diagnostic') => {
+    const laser = document.createElement('div');
+    const isGreen = type === 'diagnostic';
+    laser.className = `fixed pointer-events-none z-[90] h-[1px] origin-left-center transition-opacity duration-200 ${isGreen ? 'bg-[#33ff77] shadow-[0_0_10px_#33ff77]' : 'bg-white shadow-[0_0_10px_white]'}`;
+    
+    const dist = Math.hypot(endX - startX, endY - startY);
+    const angle = Math.atan2(endY - startY, endX - startX);
+    
+    laser.style.width = `${dist}px`;
+    laser.style.left = `${startX}px`;
+    laser.style.top = `${startY}px`;
+    laser.style.transform = `rotate(${angle}rad)`;
+    
+    document.body.appendChild(laser);
+    setTimeout(() => {
+      laser.style.opacity = '0';
+      setTimeout(() => laser.remove(), 200);
+    }, 40);
+
+    for (let i = 0; i < 2; i++) {
+      particles.current.push(new Particle(endX, endY, isGreen ? '#33ff77' : '#ffffff', 2));
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!cubeRef.current || isDestroying) return;
+      
+      const rect = cubeRef.current.getBoundingClientRect();
+      const cubeX = rect.left + rect.width / 2;
+      const cubeY = rect.top + rect.height / 2;
+
+      // Card Highlighting
+      const cards = document.querySelectorAll('.service-card');
+      cards.forEach((card, i) => {
+        const cRect = card.getBoundingClientRect();
+        if (cubeX >= cRect.left && cubeX <= cRect.right) {
+          setActiveCardIndex(i);
         }
+      });
 
-        #particle-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0.8;
-        }
+      // Target Tracking
+      if (isTargeting && targetRect) {
+        const tx = targetRect.left + Math.random() * targetRect.width;
+        const ty = targetRect.top + Math.random() * targetRect.height;
+        createLaser(cubeX, cubeY, tx, ty, 'diagnostic');
+      }
+    }, 50);
 
-        .grid-wrapper {
-            width: 100%;
-            max-width: 1152px;
-            position: relative;
-            z-index: 10;
-            transition: transform 3s cubic-bezier(0.7, 0, 0.3, 1), opacity 2s ease;
-        }
+    return () => clearInterval(interval);
+  }, [isTargeting, targetRect, isDestroying]);
 
-        .pixel-track {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1) 10%, rgba(255, 255, 255, 0.1) 90%, transparent);
-            position: relative;
-            margin-bottom: 56px;
-            overflow: visible;
-        }
+  const handleDestruction = () => {
+    if (isDestroying) return;
+    setIsDestroying(true);
+    
+    const rect = cubeRef.current.getBoundingClientRect();
+    const cubeX = rect.left + rect.width / 2;
+    const cubeY = rect.top + rect.height / 2;
 
-        .walking-pixel-container {
-            position: absolute;
-            bottom: -12px;
-            left: 0;
-            width: 24px;
-            height: 24px;
-            animation: walk-grid-bounds 65s linear infinite;
-            z-index: 100;
-            pointer-events: auto;
-            cursor: pointer;
-        }
+    const destroyInterval = setInterval(() => {
+      const targets = document.querySelectorAll('.data-point');
+      targets.forEach(t => {
+        const tRect = t.getBoundingClientRect();
+        createLaser(cubeX, cubeY, tRect.left + Math.random() * tRect.width, tRect.top + Math.random() * tRect.height, 'emergency');
+      });
+    }, 80);
 
-        .paused { animation-play-state: paused !important; }
+    setTimeout(() => {
+      clearInterval(destroyInterval);
+      for (let i = 0; i < 100; i++) {
+        particles.current.push(new Particle(window.innerWidth / 2, window.innerHeight / 2, '#ffffff', 15));
+      }
+      setTimeout(() => setIsDestroying(false), 1000);
+    }, 1500);
+  };
 
-        .pixel-cube {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            background: #ffffff;
-            box-shadow: inset -4px -4px 0 rgba(0,0,0,0.1), 0 0 15px rgba(255,255,255,0.4);
-            animation: cube-bounce 0.8s ease-in-out infinite alternate;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
+  return (
+    <div 
+      className={`min-h-screen bg-[#050505] text-[#e0e0e0] font-mono selection:bg-[#33ff77] selection:text-black transition-all duration-700 ${isDestroying ? 'invert brightness-110' : ''}`}
+      onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
+    >
+      {/* Background Tech Layer */}
+      <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,_transparent_0%,_black_100%)] pointer-events-none z-[1]" />
+      <div className="fixed inset-0 opacity-[0.03] pointer-events-none z-[2] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
-        /* Destruction State Styles */
-        .destroy-mode .pixel-cube {
-            background: #ff0000 !important;
-            box-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000 !important;
-            animation: cube-shake 0.1s infinite !important;
-        }
+      {/* HUD Borders */}
+      <div className="fixed top-0 left-0 w-full h-1 bg-white/10 z-[100]" />
+      <div className="fixed bottom-0 left-0 w-full h-1 bg-white/10 z-[100]" />
+      <div className="fixed top-0 left-0 h-full w-1 bg-white/10 z-[100]" />
+      <div className="fixed top-0 right-0 h-full w-1 bg-white/10 z-[100]" />
 
-        @keyframes cube-shake {
-            0% { transform: translate(1px, 1px); }
-            50% { transform: translate(-1px, -1px); }
-            100% { transform: translate(1px, 1px); }
-        }
-
-        .scanned-text, .hero-subline, .hero-description, .modest-card, .upcoming-btn-container {
-            display: inline-block;
-            transition: color 0.3s ease, text-shadow 0.3s ease, opacity 0.5s ease, transform 3s cubic-bezier(0.7, 0, 0.3, 1);
-        }
-
-        .is-disintegrating {
-            animation: text-glitch-destroy 0.2s infinite !important;
-            color: #ff4d4d !important;
-            text-shadow: 0 0 20px #ff0000 !important;
-        }
-
-        @keyframes text-glitch-destroy {
-            0% { transform: translate(0); }
-            50% { transform: translate(-2px, 2px); }
-            100% { transform: translate(0); }
-        }
-
-        .spectrum-array {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            transform: translate(10px, -50%);
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .structured-beam {
-            height: 2px;
-            width: 0;
-            opacity: 0;
-            border-radius: 2px;
-            transform-origin: left center;
-            animation: structured-shoot 2s infinite;
-        }
-
-        .beam-red    { background: #ff4d4d; animation-delay: 0.0s; box-shadow: 0 0 8px #ff4d4d; }
-        .beam-yellow { background: #ffd11a; animation-delay: 0.2s; box-shadow: 0 0 8px #ffd11a; }
-        .beam-green  { background: #33ff77; animation-delay: 0.4s; box-shadow: 0 0 8px #33ff77; }
-        .beam-blue   { background: #3399ff; animation-delay: 0.6s; box-shadow: 0 0 8px #3399ff; }
-
-        @keyframes walk-grid-bounds {
-            0% { left: 0%; transform: scaleX(1); }
-            50% { left: calc(100% - 24px); transform: scaleX(-1); }
-            100% { left: 0%; transform: scaleX(1); }
-        }
-
-        @keyframes cube-bounce {
-            from { transform: translateY(0) scaleY(1); }
-            to { transform: translateY(-10px) scaleY(0.8); }
-        }
-
-        @keyframes structured-shoot {
-            0% { width: 0; opacity: 0; transform: translateX(0); }
-            10% { opacity: 1; }
-            40% { width: 60px; opacity: 1; }
-            100% { width: 140px; opacity: 0; transform: translateX(60px); }
-        }
-
-        .modest-card {
-            background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 20;
-        }
-
-        .dot-indicator {
-            width: 4px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 50%;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .reveal { opacity: 0; animation: simpleFade 1s ease forwards; }
-        @keyframes simpleFade { from { opacity: 0; } to { opacity: 1; } }
-
-        .laser-visual {
-            position: fixed;
-            pointer-events: none;
-            background: #ff0000;
-            box-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000;
-            z-index: 90;
-            height: 3px;
-            transform-origin: left center;
-        }
-
-        /* Target Green Beam */
-        .laser-target {
-            background: #33ff77 !important;
-            box-shadow: 0 0 15px #33ff77, 0 0 30px #33ff77 !important;
-        }
-
-        /* Flash Overlay */
-        #flash-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff;
-            z-index: 200;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .do-flash { animation: screen-flash 0.8s ease-out forwards; }
-        @keyframes screen-flash {
-            0% { opacity: 0; }
-            10% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-
-        .btn-green {
-            background: transparent;
-            color: #33ff77;
-            border: 1px solid rgba(51, 255, 119, 0.2);
-            padding: 12px 32px;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 0.2em;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-        }
-        .btn-green:hover {
-            border-color: rgba(51, 255, 119, 0.8);
-            background: rgba(51, 255, 119, 0.05);
-            box-shadow: 0 0 20px rgba(51, 255, 119, 0.1);
-        }
-
-        section { padding: 100px 0; width: 100%; max-width: 1152px; }
-    </style>
-</head>
-<body class="flex flex-col items-center">
-    <!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M9HZM3X5"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-    <div id="flash-overlay"></div>
-    <canvas id="particle-canvas"></canvas>
-
-    <header class="p-8 md:p-10 flex justify-between items-center w-full fixed top-0 z-50 bg-transparent">
-        <div class="flex items-center group cursor-pointer">
-            <div class="w-6 h-6 bg-white rounded-sm transition-transform group-hover:rotate-45"></div>
-            <span class="ml-4 text-xs tracking-[0.3em] uppercase font-light opacity-50">Infinity Pixel</span>
+      {/* Header HUD */}
+      <header className="fixed top-0 w-full px-12 py-8 flex justify-between items-start z-50">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-4 group cursor-crosshair" onClick={() => window.location.reload()}>
+            <div className="w-4 h-4 border border-white flex items-center justify-center p-[2px]">
+              <div className="w-full h-full bg-white group-hover:scale-150 transition-transform duration-500" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[10px] tracking-[0.5em] uppercase font-bold text-white">Infinity Pixel</span>
+              <span className="text-[8px] tracking-[0.2em] opacity-40 uppercase">v2.0 // Studio OS</span>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-[#33ff77]/40" />)}
+            <div className="text-[8px] opacity-20 uppercase tracking-tighter">System Stable</div>
+          </div>
         </div>
-        <nav class="flex gap-10">
-            <a href="mailto:infinitypixelhub@proton.me" class="btn-green hover-target">Contact</a>
+
+        <nav className="flex flex-col items-end gap-2">
+          <a 
+            href="mailto:contact@infinitypixel.io"
+            onMouseEnter={(e) => { setIsTargeting(true); setTargetRect(e.target.getBoundingClientRect()); }}
+            onMouseLeave={() => setIsTargeting(false)}
+            className="group relative px-6 py-2 border border-white/10 hover:border-[#33ff77] transition-all duration-300 overflow-hidden"
+          >
+            <div className="relative z-10 flex items-center gap-3 text-[10px] tracking-widest uppercase">
+              <LucideMaximize2 size={10} className="group-hover:rotate-90 transition-transform" /> 
+              Transmission
+            </div>
+            <div className="absolute inset-0 bg-[#33ff77]/10 translate-y-full group-hover:translate-y-0 transition-transform" />
+          </a>
+          <span className="text-[8px] opacity-20 uppercase tracking-widest">Protocol: SMTP/Secure</span>
         </nav>
-    </header>
+      </header>
 
-    <main class="flex-grow flex flex-col items-center px-8 w-full relative z-10">
+      {/* Scrollable Content */}
+      <main className="relative z-10 pt-40 flex flex-col items-center">
         
-        <!-- Hero Section -->
-        <section class="min-h-screen flex flex-col justify-center items-center pt-20">
-            <div class="text-center max-w-3xl mb-24 reveal" style="animation-delay: 0.2s">
-                <h1 class="text-4xl md:text-6xl font-normal tracking-tight mb-8" id="hero-title">
-                    <span class="scanned-text">Thoughtful</span> <span class="scanned-text">software,</span> <br>
-                    <span class="hero-subline opacity-40">carefully crafted.</span>
-                </h1>
-                <p class="text-gray-500 font-light leading-relaxed md:px-20 text-lg hero-description transition-opacity duration-1000">
-                    A digital studio bridging the gap between artistic vision and technical precision.
-                </p>
-            </div>
+        {/* Main Section */}
+        <section className="min-h-[80vh] flex flex-col justify-center items-center px-6 max-w-6xl w-full text-center relative">
+          {/* Decorative Crosshair HUD */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] h-[70vh] border-[0.5px] border-white/5 pointer-events-none">
+            <div className="absolute -top-1 -left-1 w-2 h-2 border-t border-l border-[#33ff77]" />
+            <div className="absolute -top-1 -right-1 w-2 h-2 border-t border-r border-[#33ff77]" />
+            <div className="absolute -bottom-1 -left-1 w-2 h-2 border-b border-l border-[#33ff77]" />
+            <div className="absolute -bottom-1 -right-1 w-2 h-2 border-b border-r border-[#33ff77]" />
+          </div>
 
-            <!-- Interaction Zone -->
-            <div class="grid-wrapper reveal" style="animation-delay: 0.4s" id="interaction-zone">
-                <div class="pixel-track">
-                    <div class="walking-pixel-container" id="cube-container">
-                        <div class="pixel-cube"></div>
-                        <div class="spectrum-array">
-                            <div class="structured-beam beam-red"></div>
-                            <div class="structured-beam beam-yellow"></div>
-                            <div class="structured-beam beam-green"></div>
-                            <div class="structured-beam beam-blue"></div>
-                        </div>
-                    </div>
-                </div>
+          <div className="data-point relative mb-12">
+            <span className="absolute -top-8 left-1/2 -translate-x-1/2 text-[8px] opacity-30 tracking-[0.5em] uppercase">Architecture // UI</span>
+            <h1 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-[0.85] text-white">
+              <span className="block hover:italic transition-all duration-300">Thoughtful</span>
+              <span className="block opacity-20">Software,</span>
+              <span className="block relative">
+                Crafted.
+                <div className="absolute -right-8 top-1/2 w-4 h-[1px] bg-[#33ff77] hidden md:block" />
+              </span>
+            </h1>
+          </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16" id="service-grid">
-                    <div class="modest-card p-10 rounded-sm">
-                        <div class="dot-indicator mb-6"></div>
-                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Compelling Storytelling</h3>
-                        <p class="text-xs text-gray-600 leading-relaxed">We weave your brand’s unique narrative into every pixel, creating emotional connections that resonate deeply and turn visitors into advocates.</p>
-                    </div>
-                    <div class="modest-card p-10 rounded-sm">
-                        <div class="dot-indicator mb-6"></div>
-                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Focus on Interactive Elements</h3>
-                        <p class="text-xs text-gray-600 leading-relaxed">Engage your audience with intuitive, responsive features. We prioritize tactile digital experiences that encourage exploration and keep users scrolling for more.</p>
-                    </div>
-                    <div class="modest-card p-10 rounded-sm">
-                        <div class="dot-indicator mb-6"></div>
-                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Superfast Code Execution</h3>
-                        <p class="text-xs text-gray-600 leading-relaxed">Performance is our priority. Our lean, optimized backend ensures lightning-fast load times and seamless transitions for a frictionless user experience.</p>
-                    </div>
-                    <div class="modest-card p-10 rounded-sm">
-                        <div class="dot-indicator mb-6"></div>
-                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Websites That Come to Life</h3>
-                        <p class="text-xs text-gray-600 leading-relaxed">We don’t do static. We build dynamic, breathing digital ecosystems fueled by motion, real-time data, and vibrant, purposeful animation.</p>
-                    </div>
-                </div>
+          <p className="data-point text-gray-400 max-w-lg text-xs leading-relaxed uppercase tracking-widest font-light opacity-60">
+            Designing logic systems for a post-analog era. <br/>
+            Technological precision meets visionary aesthetics.
+          </p>
 
-                <div class="flex justify-center upcoming-btn-container reveal" style="animation-delay: 0.5s">
-                    <a href="https://infinityxpixel.github.io/blankedgame/" target="_blank" class="btn-green hover-target">
-                        Upcoming Game: Blanked
-                    </a>
-                </div>
-            </div>
+          {/* Mouse Coordinate Tracker */}
+          <div className="mt-12 text-[8px] font-mono opacity-20 flex gap-4 tracking-widest uppercase">
+            <span>X: {mousePos.x.toString().padStart(4, '0')}</span>
+            <span>Y: {mousePos.y.toString().padStart(4, '0')}</span>
+            <span className="text-[#33ff77] animate-pulse">● Live Feed</span>
+          </div>
         </section>
 
-    </main>
+        {/* The Interaction Linear HUD */}
+        <section className="w-full max-w-6xl px-12 py-32 border-t border-white/5">
+          <div className="flex justify-between items-end mb-8">
+            <div className="text-[10px] tracking-[0.4em] uppercase font-bold">01 / Capabilities</div>
+            <div className="text-[8px] opacity-20 uppercase">Core Systems Diagnostic</div>
+          </div>
 
-    <footer class="p-10 w-full flex justify-center items-center text-[10px] tracking-widest text-gray-600 uppercase border-t border-white/5 relative z-10">
-        <div>&copy;2026 Infinity Pixel</div>
-    </footer>
+          <div className="relative h-[2px] w-full bg-white/5 mb-32 group">
+            <div 
+              ref={cubeRef}
+              onClick={handleDestruction}
+              className={`absolute top-1/2 -translate-y-1/2 w-8 h-8 border border-white cursor-pointer transition-all duration-300 flex items-center justify-center bg-black
+                ${isDestroying ? 'border-red-500 scale-150 rotate-90' : 'hover:bg-white hover:text-black hover:-rotate-45'}`}
+              style={{
+                animation: isDestroying ? 'none' : 'walk 15s linear infinite alternate',
+                left: '0'
+              }}
+            >
+              <LucideCrosshair size={14} className={isDestroying ? 'text-red-500 animate-spin' : ''} />
+            </div>
+            
+            {/* Label for the cube */}
+            <div 
+              className="absolute -top-12 text-[8px] uppercase tracking-widest opacity-30 pointer-events-none whitespace-nowrap"
+              style={{ animation: 'walk 15s linear infinite alternate', left: '0' }}
+            >
+              System Integrity: {isDestroying ? 'ERR_FATAL' : '99.92%'}
+            </div>
+          </div>
 
-    <script>
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        const cubeContainer = document.getElementById('cube-container');
-        const flashOverlay = document.getElementById('flash-overlay');
-        const heroSpans = document.querySelectorAll('.scanned-text, .hero-subline');
-        const scannedTitles = document.querySelectorAll('.scanned-text');
-        const description = document.querySelector('.hero-description');
-        const cards = document.querySelectorAll('.modest-card');
-        const hoverTargets = document.querySelectorAll('.hover-target');
-        const upcomingBtnContainer = document.querySelector('.upcoming-btn-container');
+          {/* New Service Matrix */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/10 border border-white/10">
+            {[
+              { title: "Storytelling", desc: "Digital narratives calibrated for emotional conversion.", icon: LucideDna },
+              { title: "Interaction", desc: "Kinetic interfaces that respond to biological intent.", icon: LucideMousePointer2 },
+              { title: "Performance", desc: "Optimized bytecode execution for zero-latency response.", icon: LucideZap },
+              { title: "Global Core", desc: "Scalable cloud architecture for a borderless web.", icon: LucideGlobe }
+            ].map((item, i) => (
+              <div 
+                key={i}
+                className={`service-card p-12 bg-[#050505] transition-all duration-500 relative group cursor-crosshair
+                  ${activeCardIndex === i ? 'bg-white/5' : ''}`}
+              >
+                <div 
+                  className="w-8 h-[1px] mb-8 transition-all duration-500"
+                  style={{ 
+                    backgroundColor: activeCardIndex === i ? '#33ff77' : 'rgba(255,255,255,0.1)',
+                    width: activeCardIndex === i ? '100%' : '32px'
+                  }} 
+                />
+                <item.icon className={`mb-6 transition-all duration-500 ${activeCardIndex === i ? 'text-[#33ff77] scale-125' : 'opacity-20'}`} size={18} />
+                <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase mb-4 text-white">{item.title}</h3>
+                <p className="text-[10px] text-gray-500 leading-relaxed font-light uppercase tracking-tighter">{item.desc}</p>
+                
+                {activeCardIndex === i && (
+                  <div className="absolute bottom-4 right-4 text-[8px] text-[#33ff77] animate-pulse">
+                    ACTIVE_LINK_NODE_{i}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Footer Interactive */}
+          <div className="mt-32 flex flex-col md:flex-row justify-between items-center gap-12 border-b border-white/5 pb-20">
+            <div className="max-w-xs">
+              <div className="text-[8px] uppercase tracking-[0.5em] opacity-30 mb-4">Secondary Objective</div>
+              <h4 className="text-xl font-bold uppercase tracking-tighter text-white mb-4">Blanked: The Simulation</h4>
+              <p className="text-[9px] text-gray-500 uppercase tracking-widest leading-loose">
+                Our upcoming experimental game environment. A study in minimal movement and reactive soundscapes.
+              </p>
+            </div>
+            
+            <button
+              onMouseEnter={(e) => { setIsTargeting(true); setTargetRect(e.target.getBoundingClientRect()); }}
+              onMouseLeave={() => setIsTargeting(false)}
+              className="group relative px-12 py-5 bg-white text-black text-[10px] font-bold tracking-[0.4em] uppercase hover:bg-[#33ff77] transition-colors overflow-hidden"
+            >
+              <span className="relative z-10 flex items-center gap-4">
+                <LucideGamepad2 size={14} /> Initialize Simulation
+              </span>
+              <div className="absolute top-0 left-0 w-full h-full bg-black/10 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="w-full px-12 py-20 flex flex-col md:flex-row justify-between items-center gap-8 opacity-20 relative z-50">
+        <div className="flex flex-col gap-2">
+          <span className="text-[8px] tracking-[0.5em] uppercase font-bold">Infinity Pixel Hub // EST. 2026</span>
+          <span className="text-[8px] tracking-widest uppercase">Location: [REDACTED]</span>
+        </div>
         
-        let particles = [];
-        let globalRays = [];
-        let isTargeting = false;
-        let isDestroying = false;
-        let targetingInterval = null;
-        const PRISM_COLORS = ['#ff4d4d', '#ffd11a', '#33ff77', '#3399ff'];
-        let colorIndex = 0;
+        <div className="flex gap-8 text-[8px] tracking-[0.3em] uppercase">
+          {['Twitter/X', 'GitHub', 'Linear', 'Discord'].map(social => (
+            <span key={social} className="hover:text-[#33ff77] hover:opacity-100 cursor-pointer transition-all">{social}</span>
+          ))}
+        </div>
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        <div className="text-[8px] opacity-40 uppercase">
+          Status: <span className="text-[#33ff77]">Online</span> // Latency: 14ms
+        </div>
+      </footer>
+
+      {/* Global CSS for custom animations */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes walk {
+          0% { left: 0; transform: scaleX(1) translateY(-50%); }
+          100% { left: calc(100% - 32px); transform: scaleX(-1) translateY(-50%); }
         }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Particle {
-            constructor(x, y, color, speedMult = 1) {
-                this.x = x;
-                this.y = y;
-                this.size = Math.random() * 3 + 1;
-                this.speedX = (Math.random() - 0.5) * 4 * speedMult;
-                this.speedY = (Math.random() - 0.5) * 4 * speedMult;
-                this.color = color;
-                this.life = 1.0;
-                this.decay = Math.random() * 0.02 + 0.01;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.life -= this.decay;
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.globalAlpha = Math.max(0, this.life);
-                ctx.fillRect(this.x, this.y, this.size, this.size);
-            }
+        .origin-left-center { transform-origin: left center; }
+        
+        body {
+          scrollbar-width: thin;
+          scrollbar-color: #333 #050505;
         }
-
-        class GlobalRay {
-            constructor(x, color) {
-                this.x = x;
-                this.color = color;
-                this.life = 1.0;
-                this.width = Math.random() * 0.5 + 0.1;
-            }
-            update() { this.life -= 0.02; }
-            draw() {
-                ctx.strokeStyle = this.color;
-                ctx.globalAlpha = Math.max(0, this.life * 0.3);
-                ctx.lineWidth = this.width;
-                ctx.beginPath();
-                ctx.moveTo(this.x, 0);
-                ctx.lineTo(this.x, canvas.height);
-                ctx.stroke();
-            }
+        
+        ::-webkit-scrollbar {
+          width: 4px;
         }
-
-        function createLaser(startX, startY, endX, endY, isGreen = false) {
-            const laser = document.createElement('div');
-            laser.className = 'laser-visual' + (isGreen ? ' laser-target' : '');
-            const dist = Math.hypot(endX - startX, endY - startY);
-            const angle = Math.atan2(endY - startY, endX - startX);
-            
-            laser.style.width = dist + 'px';
-            laser.style.left = startX + 'px';
-            laser.style.top = startY + 'px';
-            laser.style.transform = `rotate(${angle}rad)`;
-            
-            const thickness = Math.random() * 4 + 1;
-            laser.style.height = thickness + 'px';
-            
-            document.body.appendChild(laser);
-            setTimeout(() => laser.remove(), 60);
-
-            for(let i=0; i<3; i++) {
-                particles.push(new Particle(endX, endY, isGreen ? '#33ff77' : '#ff0000', 3));
-            }
+        ::-webkit-scrollbar-track {
+          background: #050505;
         }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            globalRays.forEach((ray, i) => {
-                ray.update(); ray.draw();
-                if(ray.life <= 0) globalRays.splice(i, 1);
-            });
-
-            particles.forEach((p, i) => {
-                p.update(); p.draw();
-                if(p.life <= 0) particles.splice(i, 1);
-            });
-            
-            requestAnimationFrame(animate);
+        ::-webkit-scrollbar-thumb {
+          background: #333;
         }
-        animate();
+        ::-webkit-scrollbar-thumb:hover {
+          background: #33ff77;
+        }
+      `}} />
+    </div>
+  );
+};
 
-        // Destruction Interaction logic (Restored)
-        cubeContainer.addEventListener('click', () => {
-            if (isDestroying || isTargeting) return;
-            isDestroying = true;
-            
-            document.body.classList.add('destroy-mode');
-            cubeContainer.classList.add('paused');
-            
-            const rect = cubeContainer.getBoundingClientRect();
-            const startX = rect.left + rect.width / 2;
-            const startY = rect.top + rect.height / 2;
+export default App;
 
-            // Phase 1: Fire Red Lasers at Title
-            const destroyInterval = setInterval(() => {
-                heroSpans.forEach(el => {
-                    el.classList.add('is-disintegrating');
-                    const elRect = el.getBoundingClientRect();
-                    const targetX = elRect.left + Math.random() * elRect.width;
-                    const targetY = elRect.top + Math.random() * elRect.height;
-                    createLaser(startX, startY, targetX, targetY, false);
-                });
-                upcomingBtnContainer.style.opacity = '0';
-                description.style.opacity = '0.1';
-            }, 70);
-
-            // Phase 2: Screen Flash and Fade
-            setTimeout(() => {
-                clearInterval(destroyInterval);
-                heroSpans.forEach(el => el.style.opacity = '0');
-                description.style.opacity = '0';
-                
-                // Burst of particles
-                for(let i = 0; i < 200; i++) {
-                    particles.push(new Particle(window.innerWidth/2, window.innerHeight/2, PRISM_COLORS[i%4], 15));
-                }
-                
-                flashOverlay.classList.add('do-flash');
-            }, 2000);
-
-            // Phase 3: Restoration
-            setTimeout(() => {
-                document.body.classList.remove('destroy-mode');
-                cubeContainer.classList.remove('paused');
-                flashOverlay.classList.remove('do-flash');
-                heroSpans.forEach(el => {
-                    el.classList.remove('is-disintegrating');
-                    el.style.opacity = '';
-                });
-                description.style.opacity = '';
-                upcomingBtnContainer.style.opacity = '';
-                isDestroying = false;
-            }, 2800);
-        });
-
-        // Hover Laser Logic
-        hoverTargets.forEach(target => {
-            target.addEventListener('mouseenter', () => {
-                if (isDestroying) return;
-                isTargeting = true;
-                cubeContainer.classList.add('paused');
-                document.querySelector('.spectrum-array').style.opacity = '0';
-                
-                targetingInterval = setInterval(() => {
-                    const pixelRect = cubeContainer.getBoundingClientRect();
-                    const targetRect = target.getBoundingClientRect();
-                    
-                    const startX = pixelRect.left + pixelRect.width / 2;
-                    const startY = pixelRect.top + pixelRect.height / 2;
-                    
-                    const targetX = targetRect.left + Math.random() * targetRect.width;
-                    const targetY = targetRect.top + Math.random() * targetRect.height;
-                    
-                    createLaser(startX, startY, targetX, targetY, true);
-                }, 50);
-            });
-
-            target.addEventListener('mouseleave', () => {
-                isTargeting = false;
-                clearInterval(targetingInterval);
-                if (!isDestroying) {
-                    cubeContainer.classList.remove('paused');
-                    document.querySelector('.spectrum-array').style.opacity = '1';
-                }
-            });
-        });
-
-        // Background Logic
-        setInterval(() => {
-            const rect = cubeContainer.getBoundingClientRect();
-            const cubeX = rect.left + rect.width / 2;
-            const activeColor = PRISM_COLORS[Math.floor(Date.now() / 800) % PRISM_COLORS.length];
-
-            if (!cubeContainer.classList.contains('paused')) {
-                globalRays.push(new GlobalRay(cubeX, activeColor));
-            }
-
-            scannedTitles.forEach((span, idx) => {
-                const spanRect = span.getBoundingClientRect();
-                const distance = Math.abs(cubeX - (spanRect.left + spanRect.width/2));
-                if (distance < 150) {
-                    const intensity = 1 - (distance / 150);
-                    const color = PRISM_COLORS[idx % PRISM_COLORS.length];
-                    span.style.color = color;
-                    span.style.textShadow = `0 0 ${15 * intensity}px ${color}`;
-                } else {
-                    span.style.color = '';
-                    span.style.textShadow = '';
-                }
-            });
-
-            cards.forEach((card, index) => {
-                const cardRect = card.getBoundingClientRect();
-                if (cubeX >= cardRect.left && cubeX <= cardRect.right) {
-                    const cycleColor = PRISM_COLORS[index % PRISM_COLORS.length];
-                    card.style.borderColor = cycleColor;
-                    const dot = card.querySelector('.dot-indicator');
-                    dot.style.background = cycleColor;
-                    dot.style.boxShadow = `0 0 10px ${cycleColor}`;
-                } else {
-                    card.style.borderColor = '';
-                    const dot = card.querySelector('.dot-indicator');
-                    dot.style.background = '';
-                    dot.style.boxShadow = '';
-                }
-            });
-        }, 30);
-
-        document.addEventListener('mousemove', (e) => {
-            if (isTargeting || isDestroying) return;
-            for(let i = 0; i < 2; i++) {
-                particles.push(new Particle(e.clientX, e.clientY, PRISM_COLORS[Math.floor(colorIndex)%4]));
-                colorIndex += 0.05;
-            }
-        });
-    </script>
-</body>
-</html>
+```

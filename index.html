@@ -1,418 +1,298 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-T5HVR5L3');</script>
-<!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Emperor's Decree: Spalatum - Historical Scavenger Game</title>
-    <!-- Sword Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚔️</text></svg>">
-    
+    <title>Split Quest: Digital Geocache</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Fauna+One&family=Inter:wght@400;600&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        
         :root {
-            --roman-gold: #d4af37;
-            --roman-stone: #e2e2d5;
-            --roman-red: #8b0000;
-            --deep-black: #0a0a0a;
+            --primary: #0ea5e9;
+            --success: #10b981;
+            --bg: #070a13;
         }
 
         body {
-            background-color: var(--deep-black);
-            color: var(--roman-stone);
-            font-family: 'Fauna One', serif;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: white;
             -webkit-tap-highlight-color: transparent;
         }
 
-        .cinzel { font-family: 'Cinzel', serif; }
-        
-        .parchment {
-            background: #f4e4bc;
-            background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
-            color: #1a1a1a;
-            border: 2px solid var(--roman-gold);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
         }
 
-        .btn-roman {
-            background: linear-gradient(135deg, #8b0000 0%, #5a0000 100%);
-            color: white;
-            border: 1px solid var(--roman-gold);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-family: 'Cinzel', serif;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.4);
-            cursor: pointer;
+        .premium-lock {
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-roman:active { transform: scale(0.96); }
-        .btn-roman:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        .quest-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-left: 4px solid var(--roman-gold);
-            transition: all 0.3s ease;
+        .premium-lock::after {
+            content: "PREMIUM";
+            position: absolute;
+            top: 10px;
+            right: -25px;
+            background: #f59e0b;
+            color: black;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 30px;
+            transform: rotate(45deg);
         }
 
-        .quest-card.completed {
-            border-left-color: #22c55e;
-            background: rgba(34, 197, 94, 0.05);
+        .pulse-active {
+            animation: pulse-ring 2s infinite;
+            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
         }
 
-        .quest-card.locked {
-            opacity: 0.4;
-            filter: grayscale(1);
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(14, 165, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
         }
 
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.95);
-            backdrop-filter: blur(5px);
+        .btn-gradient {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
         }
 
-        @media print {
-            @page { size: A4 landscape; margin: 0; }
-            body { background: white !important; }
-            body * { visibility: hidden; }
-            #screen-certificate, #screen-certificate * { visibility: visible; }
-            #screen-certificate {
-                position: absolute;
-                left: 0; top: 0; width: 100%;
-                display: flex; align-items: center; justify-content: center;
-                background: white !important;
-            }
-            .no-print { display: none !important; }
-        }
-
-        .cert-border {
-            border: 15px double var(--roman-red);
-            padding: 30px 15px;
-            background: #fdfaf3;
-            aspect-ratio: 1.414 / 1;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .loading-spinner {
-            border: 3px solid rgba(212, 175, 55, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid var(--roman-gold);
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .modal-enter { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="min-h-screen">
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5HVR5L3"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-    <header class="sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-yellow-900/50 p-4 shadow-xl no-print">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <h1 class="cinzel text-xl font-bold text-yellow-600 tracking-tighter">Diocletian's Decree</h1>
-            <div class="flex items-center gap-3">
-                <div id="progress-indicator" class="text-[10px] cinzel text-yellow-500 font-bold bg-yellow-900/30 px-3 py-1 rounded-full border border-yellow-700/50">
-                    0 / 7 LEGIONS
+<body class="min-h-screen pb-10">
+
+    <!-- Navbar -->
+    <nav class="p-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-black text-white tracking-tighter italic">SPLIT QUEST</h1>
+            <div id="gps-status" class="text-[10px] text-slate-500 font-mono">GPS: DISCONNECTED</div>
+        </div>
+        <div id="pay-status-badge" class="px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-400">
+            FREE VERSION
+        </div>
+    </nav>
+
+    <!-- Main View -->
+    <main class="px-5 space-y-6">
+        
+        <!-- Active Tracker -->
+        <section id="tracker-box" class="glass-card p-6 border-sky-500/20 border">
+            <h2 id="target-name" class="text-xl font-bold text-sky-400">Select a Location</h2>
+            <p id="target-hint" class="text-slate-400 text-sm mt-1">First mission (Peristil) is free to play!</p>
+            
+            <div id="meter-ui" class="mt-6 hidden">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-3xl font-mono font-black text-white" id="dist-val">---m</span>
+                    <span class="text-xs text-slate-500 mb-1">PROXIMITY</span>
+                </div>
+                <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+                    <div id="dist-bar" class="h-full bg-sky-500 transition-all duration-300" style="width: 0%"></div>
                 </div>
             </div>
-        </div>
-    </header>
+        </section>
 
-    <main id="main-view" class="max-w-md mx-auto p-4 pb-32">
-        <!-- Start Screen -->
-        <div id="screen-start" class="py-12 text-center space-y-8 no-print">
-            <div class="relative inline-block">
-                <i class="fa-solid fa-helmet-recreant text-8xl text-yellow-600"></i>
-                <div class="absolute -bottom-2 -right-2 bg-red-700 p-2 rounded-full border-2 border-yellow-600">
-                    <i class="fa-solid fa-scroll text-xl text-white"></i>
-                </div>
-            </div>
-            <div class="space-y-4">
-                <h2 class="cinzel text-4xl font-bold leading-tight uppercase">Enter the <br><span class="text-yellow-600">Labyrinth</span></h2>
-                <p class="text-stone-400 leading-relaxed italic">Soldier, the Emperor has abdicated, but his Final Decree remains hidden within the stone veins of Split. The path is narrow, but the reward is eternal.</p>
-            </div>
-            <button onclick="app.startHunt()" class="btn-roman w-full py-5 rounded-lg text-lg font-bold">Begin the Campaign</button>
-        </div>
+        <!-- Location List -->
+        <section class="space-y-3" id="location-list">
+            <!-- Locations injected here -->
+        </section>
 
-        <!-- Quest List -->
-        <div id="screen-quests" class="hidden space-y-4 no-print">
-            <div id="quest-container" class="space-y-4"></div>
-        </div>
-
-        <!-- Paywall Screen -->
-        <div id="screen-paywall" class="hidden py-10 no-print">
-            <div class="parchment p-8 text-center space-y-6 rounded-lg">
-                <i class="fa-solid fa-crown text-6xl text-red-900"></i>
-                <h2 class="cinzel text-2xl font-bold uppercase text-red-900">CONGRATULATIONS!</h2>
-                <p class="text-stone-800 italic">You have completed the trials of the commoner. OPTIONAL: To unlock two extra quests and the Imperial Certificate, you must pay tribute to the treasury.</p>
-                <div class="bg-yellow-900/10 p-4 rounded-lg border border-yellow-600/30">
-                    <p class="cinzel text-sm font-bold text-red-900">Imperial Tribute</p>
-                    <p class="text-2xl font-bold">5.00€</p>
-                </div>
-                <button id="checkout-button" onclick="app.redirectToCheckout()" class="btn-roman w-full py-4 rounded font-bold shadow-lg flex items-center justify-center gap-3">
-                    <span id="btn-text">Pay Tribute via Stripe</span>
-                    <div id="btn-spinner" class="loading-spinner hidden"></div>
-                </button>
-                <p id="payment-error" class="text-red-600 text-[10px] font-bold hidden">The treasury is currently closed. Please try again later.</p>
-                <button onclick="app.showView('screen-quests')" class="text-xs font-bold text-stone-500 uppercase tracking-widest block mx-auto">Return to Map</button>
+        <!-- Paywall (Hidden by default) -->
+        <section id="paywall-card" class="glass-card p-8 text-center border-amber-500/30 border hidden">
+            <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                </svg>
             </div>
-        </div>
-
-        <!-- Success/Return Screen (Processing) -->
-        <div id="screen-processing" class="hidden py-20 text-center no-print">
-            <div class="flex flex-col items-center gap-6">
-                <div class="loading-spinner w-12 h-12"></div>
-                <h2 class="cinzel text-xl text-yellow-600">Verifying Tribute...</h2>
-                <p class="text-stone-400 italic">The Emperor is reviewing your offering. Patience is a virtue of the Legion.</p>
-            </div>
-        </div>
-
-        <!-- Claim Screen -->
-        <div id="screen-claim" class="hidden py-10 no-print">
-            <div class="parchment p-8 text-center space-y-6">
-                <h2 class="cinzel text-3xl font-bold uppercase text-red-900">Campaign Victory</h2>
-                <p class="text-stone-800 italic">Your journey through the labyrinth is complete. State your name to be etched into the eternal stone of Split for all generations to witness.</p>
-                <input type="text" id="player-name" placeholder="YOUR NAME" class="w-full bg-white/50 border-b-2 border-red-900 p-4 text-2xl cinzel text-center focus:outline-none uppercase">
-                <button onclick="app.generateCertificate()" class="btn-roman w-full py-4 rounded font-bold">Generate Decree</button>
-            </div>
-        </div>
-
-        <!-- Certificate Screen -->
-        <div id="screen-certificate" class="hidden py-4">
-            <div class="cert-border parchment text-center text-black shadow-2xl">
-                <p class="text-[10px] cinzel tracking-widest text-red-800 mb-2 uppercase">Republic of Croatia • City of Split</p>
-                <h2 class="text-2xl font-bold cinzel mb-6 border-b border-black/20 pb-2">Imperial Decree</h2>
-                <p class="text-xs italic mb-4">Be it known to all that</p>
-                <h3 id="display-name" class="text-3xl font-bold cinzel text-red-900 mb-6 uppercase">MARCUS AURELIUS</h3>
-                <p class="text-sm px-4 leading-relaxed mb-8 italic">Has successfully navigated the stone labyrinth of Diocletian's Palace and is hereby granted the title of <strong>"Honorary Guardian of Split."</strong></p>
-                <div class="flex justify-between items-center px-6 opacity-80">
-                    <i class="fa-solid fa-stamp text-3xl text-red-900"></i>
-                    <div class="text-center">
-                        <p class="cinzel text-[10px] border-b border-black">Diocletianus Augustus</p>
-                        <p class="text-[8px]">EMPEROR OF ROME</p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8 space-y-4 no-print">
-                <button onclick="app.downloadJPG()" class="btn-roman w-full py-4 rounded font-bold">Save JPG</button>
-                <button onclick="app.resetCampaign()" class="w-full text-yellow-700 cinzel font-bold text-sm tracking-widest">Restart Campaign</button>
-            </div>
-        </div>
+            <h3 class="text-xl font-bold mb-2">Unlock Full Quest</h3>
+            <p class="text-slate-400 text-sm mb-6">Unlock all 4 coastal locations including Bačvice and Kašjuni for only €4.99.</p>
+            <!-- REPLACE THIS LINK WITH YOUR STRIPE PAYMENT LINK -->
+            <a href="https://buy.stripe.com/YOUR_ACTUAL_STRIPE_LINK" class="block w-full py-4 rounded-xl btn-gradient font-bold uppercase tracking-widest text-sm shadow-lg shadow-blue-500/20">
+                Unlock Everything
+            </a>
+        </section>
     </main>
 
-    <!-- Challenge Modal -->
-    <div id="task-modal" class="modal-overlay fixed inset-0 z-50 hidden flex items-center justify-center p-4 no-print">
-        <div class="parchment w-full max-w-sm rounded-xl p-6 relative">
-            <button onclick="app.closeModal()" class="absolute top-2 right-4 text-black/50 hover:text-black text-2xl">&times;</button>
-            <div class="mb-6">
-                <span id="modal-loc" class="text-[10px] uppercase tracking-widest text-red-800 font-bold">Location</span>
-                <h2 id="modal-title" class="cinzel text-xl font-bold text-black border-b border-black/10 pb-2">Quest Title</h2>
-            </div>
-            <div id="modal-desc" class="text-stone-800 italic text-sm mb-6 leading-relaxed"></div>
-            <div class="bg-black/5 p-4 rounded-lg space-y-4">
-                <label id="modal-question" class="block text-[10px] font-bold uppercase tracking-wider text-black/60">Imperial Inquiry</label>
-                <p id="modal-riddle-text" class="text-xs font-bold text-red-900 italic mb-1"></p>
-                <input type="text" id="answer-input" autocomplete="off" class="w-full p-3 bg-white border border-stone-400 rounded text-black uppercase font-bold focus:ring-2 focus:ring-red-900 outline-none" placeholder="Reveal your finding...">
-                <p id="error-txt" class="text-red-700 text-[10px] font-bold hidden uppercase">The answer is lost in time. Look closer at the monuments, soldier.</p>
-            </div>
-            <button onclick="app.verifyAnswer()" class="btn-roman w-full mt-6 py-4 rounded-lg font-bold">Verify Proof</button>
+    <!-- Modal for Content -->
+    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center p-6 hidden">
+        <div class="absolute inset-0 bg-black/90" onclick="closeModal()"></div>
+        <div class="glass-card w-full max-w-sm p-8 relative modal-enter">
+            <div id="modal-icon" class="mb-4"></div>
+            <h3 id="modal-title" class="text-2xl font-black mb-4"></h3>
+            <p id="modal-body" class="text-slate-300 leading-relaxed mb-8"></p>
+            <button onclick="closeModal()" class="w-full py-4 rounded-xl bg-slate-700 font-bold">CLOSE</button>
         </div>
     </div>
 
     <script>
-        const app = {
+        // CONFIGURATION
+        const STRIPE_LINK = "https://buy.stripe.com/test_demo_link"; // Change this
+        const PROXIMITY_THRESHOLD = 20; 
 
-            paymentLink: "https://buy.stripe.com/7sY9ANaG13Dpdj03dOcIE00", 
+        const LOCATIONS = [
+            { id: 'peristil', isPremium: false, name: 'Peristil', lat: 43.5083, lng: 16.4402, hint: 'Inside the Palace heart', story: 'You are standing in the Peristyle. Built 1,700 years ago, this square was designed so the Roman subjects could bow to Emperor Diocletian as he appeared in the Prothyron. The Egyptian Sphinx here was already 1,500 years old when the Romans brought it here!' },
+            { id: 'bacvice', isPremium: true, name: 'Bačvice', lat: 43.5027, lng: 16.4485, hint: 'The home of Picigin', story: 'Welcome to the most famous beach in Split. The game of Picigin was born here in 1908. It is a game of zero points and maximum effort—the only goal is to keep the ball dry and make spectacular leaps into the shallow water.' },
+            { id: 'jezinac', isPremium: true, name: 'Ježinac', lat: 43.5021, lng: 16.4257, hint: 'The Hidden Cove', story: 'A tranquil spot far from the crowds. This area features the Mestrovic Castilac, where Croatia\'s greatest sculptor turned a ruined estate into a temple of wooden reliefs and spiritual peace.' },
+            { id: 'zvoncac', isPremium: true, name: 'Zvončac', lat: 43.5028, lng: 16.4294, hint: 'The West Coast Green', story: 'Zvončac park is the gateway to Marjan hill. During the summer, this park is the social hub for youth, offering incredible views of the yachts entering the harbor and the nearby islands.' },
+            { id: 'kasjuni', isPremium: true, name: 'Kašjuni', lat: 43.5036, lng: 16.3948, hint: 'The Marjan Cliffs', story: 'One of Split\'s most photogenic beaches. Tucked directly under the steep cliffs of Marjan, it offers a dramatic Mediterranean landscape that feels worlds away from the city center.' }
+        ];
 
-            quests: [
-                { id: 0, title: "The Giant's Wish", loc: "Statue of Gregory of Nin", clue: "Seek the giant who guards the Golden Gate of the North. He holds no gladius, but a tome of forbidden script that challenged the Church itself. To find your path, you must locate the anchor of luck that millions have polished with their hopes.", riddle: "I am the only part of this bronze titan that shines like a sun-touched coin because of the touch of commoners. What am I?", ans: "toe", icon: "fa-shoe-prints" },
-                { id: 1, title: "Inside the wall passage", loc: "The Golden Gate (Porta Aurea)", clue: "High on the inner wall of the gateway, there is a stone tablet with a long Latin inscription. This gate was the main entrance for the Emperor, but later residents left their own mark. Find the large plaque and look at the second word of the text.", riddle: "What is the second word of the text, starting with H?", ans: "haec", icon: "fa-eye" },
-                { id: 2, title: "Guardian of Giza", loc: "Peristyle Square", clue: "The Emperor’s vanity reached across the Mediterranean. Here in the central square, a silent watcher from the Nile sits in eternal judgment. It was carved before the birth of Rome and brought here to signify Imperial power.", riddle: "The beast is dark as the Styx and hard as the Emperor's heart. What type of black Egyptian stone was I carved from?", ans: "granite", icon: "fa-cat" },
-                { id: 3, title: "The Temple Guardian", loc: "The Temple of Jupiter", clue: "Before you enter the temple, look at the black Sphinx sitting outside. Unlike the one in the Peristyle, this one is missing something important..", riddle: "What body part is clearly missing from this Sphinx?", ans: "head", icon: "fa-arrows-left-right" },
-                { id: 4, title: "The Roman Oculus", loc: "The Vestibul", clue: "Enter the grand circular hall, once the Imperial foyer where only the elite dared tread. Above you, the sky provides the only light through a perfect opening in the masonry. Stand in the exact center where the Emperor’s shadow once fell and look directly up at the massive void in the ceiling.", riddle: "What is the shape of the opening in the dome directly above your head?", ans: "circle", icon: "fa-dragon" },
-                { id: 5, title: "The Golden Gateway", loc: "Porta Aurea", clue: "Approach the Northern wall, the grandest entry to the fortress. This was the gate used by the Emperor himself on his arrival from Salona. Its statues have fallen, but its majesty remains etched in the limestone.", riddle: "The palace was constructed in the twilight of the Roman era. In which Roman numeral century (e.g., III, IV, V) was it finally completed?", ans: "iv", icon: "fa-door-open" },
-                { id: 6, title: "Temple of the Hill", loc: "Marjan Viewpoint", clue: "Ascend the stone stairs beyond the Jewish cemetery to the green lungs of the city. From here, you can see the entire Roman plan—the Cardo and Decumanus. In ancient times, a temple for the huntress overlooked these woods.", riddle: "Before this hill became a modern sanctuary, it held an altar for the Goddess of the Moon and the Hunt. Who was she?", ans: "diana", icon: "fa-mountain-sun" }
-            ],
-            progress: 0,
-            isPaid: false,
+        // STATE
+        let isUnlocked = localStorage.getItem('quest_premium') === 'true';
+        let completed = JSON.parse(localStorage.getItem('quest_done') || '[]');
+        let activeId = null;
+        let userCoords = null;
 
-            init() {
-                this.progress = parseInt(localStorage.getItem('diocletian_progress') || 0);
-                this.isPaid = localStorage.getItem('diocletian_paid') === 'true';
-
-                const urlParams = new URLSearchParams(window.location.search);
-
-                if (urlParams.get('success') === 'true') {
-                    this.handlePaymentSuccess();
-                } else if (this.progress >= this.quests.length) {
-                    this.showView('screen-claim');
-                } else if (this.progress > 0) {
-                    this.showView('screen-quests');
-                    this.renderQuests();
-                }
-            },
-
-            handlePaymentSuccess() {
-                this.showView('screen-processing');
-                setTimeout(() => {
-                    this.isPaid = true;
-                    localStorage.setItem('diocletian_paid', 'true');
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    this.showView('screen-quests');
-                    this.renderQuests();
-                }, 2000);
-            },
-
-            redirectToCheckout() {
-                const btn = document.getElementById('checkout-button');
-                const btnText = document.getElementById('btn-text');
-                const spinner = document.getElementById('btn-spinner');
-
-                btn.disabled = true;
-                btnText.innerText = "Redirecting to Treasury...";
-                spinner.classList.remove('hidden');
-
-                window.location.href = this.paymentLink;
-            },
-
-            startHunt() {
-                this.showView('screen-quests');
-                this.renderQuests();
-            },
-
-            showView(viewId) {
-                ['screen-start', 'screen-quests', 'screen-paywall', 'screen-claim', 'screen-certificate', 'screen-processing'].forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.classList.add('hidden');
-                });
-                const active = document.getElementById(viewId);
-                if (active) active.classList.remove('hidden');
-                window.scrollTo(0, 0);
-            },
-
-            renderQuests() {
-                const container = document.getElementById('quest-container');
-                container.innerHTML = '';
-                this.quests.forEach((q, idx) => {
-                    const isPremium = idx >= 5;
-                    const isLocked = (idx > this.progress) || (isPremium && !this.isPaid);
-                    const isDone = idx < this.progress;
-                    
-                    const card = document.createElement('div');
-                    card.className = `quest-card p-4 rounded-lg flex items-center gap-4 ${isLocked ? 'locked' : ''} ${isDone ? 'completed' : ''}`;
-                    card.onclick = () => {
-                        if (isPremium && !this.isPaid) this.showView('screen-paywall');
-                        else if (!isLocked) this.openModal(idx);
-                    };
-
-                    card.innerHTML = `
-                        <div class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${isDone ? 'bg-green-700' : 'bg-yellow-900'} text-white border-2 border-yellow-600">
-                            <i class="fa-solid ${isLocked && isPremium ? 'fa-lock' : (isDone ? 'fa-check' : q.icon)}"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="cinzel font-bold text-yellow-600 text-sm">${isLocked && isPremium ? 'Premium Quest' : q.title}</h4>
-                            <p class="text-[10px] text-stone-500 uppercase font-bold tracking-tight">${isLocked && isPremium ? 'Tribute Required' : q.loc}</p>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-                document.getElementById('progress-indicator').innerText = `${this.progress} / 7 LEGIONS`;
-                localStorage.setItem('diocletian_progress', this.progress);
-            },
-
-            openModal(id) {
-                const q = this.quests[id];
-                this.activeId = id;
-                document.getElementById('modal-loc').innerText = q.loc;
-                document.getElementById('modal-title').innerText = q.title;
-                document.getElementById('modal-desc').innerText = q.clue;
-                document.getElementById('modal-riddle-text').innerText = q.riddle;
-                document.getElementById('answer-input').value = '';
-                document.getElementById('error-txt').classList.add('hidden');
-                document.getElementById('task-modal').classList.remove('hidden');
-            },
-
-            closeModal() { document.getElementById('task-modal').classList.add('hidden'); },
-
-            verifyAnswer() {
-                const val = document.getElementById('answer-input').value.toLowerCase().trim();
-                if (val === "imperial-legal-check") { 
-        console.log("ORIGINAL CODE PROPERTY OF: Infinity Pixel");
-        console.log("Copyright © 2026 All rights reserved.");
-        alert("Verification Code: 7721-Beta");
-        return; 
-    }
-                const correct = this.quests[this.activeId].ans;
-                if (val.includes(correct)) {
-                    this.progress++;
-                    this.closeModal();
-                    
-                    if (this.progress === 5 && !this.isPaid) {
-                        this.showView('screen-paywall');
-                    } else if (this.progress >= this.quests.length) {
-                        this.showView('screen-claim');
-                    } else {
-                        this.renderQuests();
-                    }
-                } else {
-                    document.getElementById('error-txt').classList.remove('hidden');
-                }
-            },
-
-            generateCertificate() {
-                const name = document.getElementById('player-name').value;
-                if (!name) return;
-                document.getElementById('display-name').innerText = name.toUpperCase();
-                this.showView('screen-certificate');
-            },
-
-           downloadJPG() {
-                const element = document.querySelector('.cert-border');
-                const name = document.getElementById('display-name').innerText;
-                
-                html2canvas(element, {
-                    scale: 2, 
-                    useCORS: true,
-                    backgroundColor: "#f4e4bc" 
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `Imperial_Decree_${name}.jpg`;
-                    link.href = canvas.toDataURL("image/jpeg", 0.9); // 0.9 is quality
-                    link.click();
-                });
-            },
-
-            resetCampaign() {
-                if (confirm("Restart the campaign? Your payment status will be preserved.")) {
-                    localStorage.removeItem('diocletian_progress');
-                    location.href = window.location.origin + window.location.pathname;
-                }
+        // INITIALIZE
+        function init() {
+            // Check for Stripe success redirect
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                isUnlocked = true;
+                localStorage.setItem('quest_premium', 'true');
+                showModal("Payment Confirmed", "Welcome to the full experience! All locations are now unlocked. Happy hunting!", "🎉");
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
-        };
 
-        window.onload = () => app.init();
-        
+            renderUI();
+            startTracking();
+        }
+
+        function renderUI() {
+            const list = document.getElementById('location-list');
+            const paywall = document.getElementById('paywall-card');
+            const badge = document.getElementById('pay-status-badge');
+            
+            list.innerHTML = '';
+            
+            badge.innerText = isUnlocked ? "PREMIUM ACTIVE" : "FREE VERSION";
+            badge.className = isUnlocked ? "px-3 py-1 rounded-full text-[10px] font-bold border border-emerald-500 text-emerald-500" : "px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-400";
+
+            LOCATIONS.forEach(loc => {
+                const isLocked = loc.isPremium && !isUnlocked;
+                const isDone = completed.includes(loc.id);
+                const isActive = activeId === loc.id;
+
+                const el = document.createElement('div');
+                el.className = `glass-card p-4 flex justify-between items-center transition-all ${isLocked ? 'opacity-50 grayscale' : 'cursor-pointer'} ${isActive ? 'border-sky-500 border-2 pulse-active' : ''}`;
+                
+                el.onclick = () => {
+                    if (isLocked) {
+                        paywall.scrollIntoView({ behavior: 'smooth' });
+                        paywall.classList.add('pulse-active');
+                        setTimeout(() => paywall.classList.remove('pulse-active'), 2000);
+                    } else if (isDone) {
+                        showModal(loc.name, loc.story, "📖");
+                    } else {
+                        setActive(loc.id);
+                    }
+                };
+
+                el.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${isDone ? 'bg-emerald-500 text-black' : 'bg-slate-800 text-slate-500'}">
+                            ${isDone ? '✓' : '📍'}
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm ${isLocked ? 'text-slate-500' : 'text-white'}">${loc.name}</h4>
+                            <p class="text-[10px] text-slate-500 uppercase">${isLocked ? 'Locked' : loc.hint}</p>
+                        </div>
+                    </div>
+                    ${isLocked ? '🔒' : ''}
+                `;
+                list.appendChild(el);
+            });
+
+            // Show paywall if first task is done and not unlocked
+            if (completed.includes('peristil') && !isUnlocked) {
+                paywall.classList.remove('hidden');
+            } else {
+                paywall.classList.add('hidden');
+            }
+        }
+
+        function setActive(id) {
+            activeId = id;
+            const loc = LOCATIONS.find(l => l.id === id);
+            document.getElementById('target-name').innerText = loc.name;
+            document.getElementById('target-hint').innerText = "Navigate within 20m of " + loc.name;
+            document.getElementById('meter-ui').classList.remove('hidden');
+            renderUI();
+            updateDistance();
+        }
+
+        function startTracking() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.watchPosition(
+                (pos) => {
+                    userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    document.getElementById('gps-status').innerText = `GPS: ACCURACY ±${Math.round(pos.coords.accuracy)}M`;
+                    updateDistance();
+                },
+                (err) => { document.getElementById('gps-status').innerText = "GPS ERROR: ENABLE PERMISSIONS"; },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function updateDistance() {
+            if (!userCoords || !activeId) return;
+            const target = LOCATIONS.find(l => l.id === activeId);
+            const dist = haversine(userCoords.lat, userCoords.lng, target.lat, target.lng);
+            
+            document.getElementById('dist-val').innerText = `${Math.round(dist)}m`;
+            
+            // Progress bar (full at 200m or closer)
+            const progress = Math.max(5, Math.min(100, 100 - (dist / 5)));
+            document.getElementById('dist-bar').style.width = `${progress}%`;
+
+            if (dist <= PROXIMITY_THRESHOLD) {
+                completeMission(activeId);
+            }
+        }
+
+        function completeMission(id) {
+            if (!completed.includes(id)) {
+                completed.push(id);
+                localStorage.setItem('quest_done', JSON.stringify(completed));
+                const loc = LOCATIONS.find(l => l.id === id);
+                showModal(loc.name, loc.story, "🎉 MISSION COMPLETE");
+                activeId = null;
+                document.getElementById('meter-ui').classList.add('hidden');
+                document.getElementById('target-name').innerText = "Mission Accomplished!";
+                document.getElementById('target-hint').innerText = "Select your next destination.";
+                renderUI();
+            }
+        }
+
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const dLat = (lat2-lat1)*Math.PI/180;
+            const dLon = (lon2-lon1)*Math.PI/180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function showModal(title, body, icon) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerText = body;
+            document.getElementById('modal-icon').innerText = icon;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        window.onload = init;
     </script>
-    
 </body>
 </html>
+
+```

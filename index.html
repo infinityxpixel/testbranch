@@ -4,29 +4,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinity Pixel v2.0</title>
+    <title>Infinity Pixel | Studio</title>
+    <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    
     <style>
         @keyframes walk {
             0% { left: 0; transform: scaleX(1) translateY(-50%); }
             100% { left: calc(100% - 32px); transform: scaleX(-1) translateY(-50%); }
         }
+        @keyframes scanLine {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
         body {
-            scrollbar-width: thin;
-            scrollbar-color: #333 #050505;
+            background-color: #050505;
+            color: #ffffff;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             margin: 0;
             overflow-x: hidden;
-            background: #050505;
+            scrollbar-width: thin;
+            scrollbar-color: #333 #050505;
         }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #333; }
-        ::-webkit-scrollbar-thumb:hover { background: #33ff77; }
-        .origin-left-center { transform-origin: left center; }
+        .perspective-grid {
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+        }
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: #33ff77;
+            box-shadow: 0 0 10px #33ff77;
+            animation: scanLine 4s linear infinite;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        .pixel-border {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .pixel-border:hover {
+            border-color: #33ff77;
+        }
     </style>
 </head>
 <body>
@@ -34,18 +59,18 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
-        
-        // Inline Lucide Icon Helper
-        const Icon = ({ name, size = 18, className = "" }) => {
+
+        // Custom Icon wrapper to ensure Lucide works in React
+        const Icon = ({ name, size = 16, className = "" }) => {
             const iconRef = useRef(null);
             useEffect(() => {
-                if (iconRef.current) {
-                    const iconName = name.charAt(0).toUpperCase() + name.slice(1);
-                    const lucideIcon = lucide.icons[iconName];
+                if (iconRef.current && lucide) {
+                    const iconName = name.split('-').map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('');
+                    const lucideIcon = lucide.icons[iconName] || lucide.icons[name];
                     if (lucideIcon) {
-                        const svg = lucide.createIcons({
+                        lucide.createIcons({
                             icons: { [iconName]: lucideIcon },
-                            attrs: { strokeWidth: 2, width: size, height: size }
+                            attrs: { strokeWidth: 1.5, width: size, height: size }
                         });
                     }
                 }
@@ -54,200 +79,132 @@
         };
 
         const App = () => {
-            const [isDestroying, setIsDestroying] = useState(false);
-            const [isTargeting, setIsTargeting] = useState(false);
-            const [targetRect, setTargetRect] = useState(null);
-            const [activeCardIndex, setActiveCardIndex] = useState(-1);
             const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-            
-            const canvasRef = useRef(null);
-            const particles = useRef([]);
-            const requestRef = useRef();
+            const [isDestroying, setIsDestroying] = useState(false);
             const cubeRef = useRef(null);
 
-            class Particle {
-                constructor(x, y, color, speedMult = 1) {
-                    this.x = x; this.y = y;
-                    this.size = Math.random() * 2 + 0.5;
-                    this.speedX = (Math.random() - 0.5) * 3 * speedMult;
-                    this.speedY = (Math.random() - 0.5) * 3 * speedMult;
-                    this.color = color; this.life = 1.0;
-                    this.decay = Math.random() * 0.03 + 0.01;
-                }
-                update() { this.x += this.speedX; this.y += this.speedY; this.life -= this.decay; }
-                draw(ctx) {
-                    ctx.fillStyle = this.color; ctx.globalAlpha = Math.max(0, this.life);
-                    ctx.fillRect(this.x, this.y, this.size, this.size);
-                }
-            }
-
-            const animate = useCallback(() => {
-                const canvas = canvasRef.current;
-                if (!canvas) return;
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.current.forEach((p, i) => {
-                    p.update(); p.draw(ctx);
-                    if (p.life <= 0) particles.current.splice(i, 1);
-                });
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-                ctx.lineWidth = 0.5;
-                const spacing = 60;
-                for (let x = 0; x < canvas.width; x += spacing) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
-                for (let y = 0; y < canvas.height; y += spacing) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
-                requestRef.current = requestAnimationFrame(animate);
-            }, []);
-
-            useEffect(() => {
-                const handleResize = () => {
-                    if (canvasRef.current) {
-                        canvasRef.current.width = window.innerWidth;
-                        canvasRef.current.height = window.innerHeight;
-                    }
-                };
-                window.addEventListener('resize', handleResize);
-                handleResize();
-                requestRef.current = requestAnimationFrame(animate);
-                return () => {
-                    window.removeEventListener('resize', handleResize);
-                    cancelAnimationFrame(requestRef.current);
-                };
-            }, [animate]);
-
-            const createLaser = (startX, startY, endX, endY, type = 'diagnostic') => {
-                const laser = document.createElement('div');
-                const isGreen = type === 'diagnostic';
-                laser.className = `fixed pointer-events-none z-[90] h-[1px] origin-left-center transition-opacity duration-200 ${isGreen ? 'bg-[#33ff77] shadow-[0_0_10px_#33ff77]' : 'bg-white shadow-[0_0_10px_white]'}`;
-                const dist = Math.hypot(endX - startX, endY - startY);
-                const angle = Math.atan2(endY - startY, endX - startX);
-                laser.style.width = `${dist}px`; laser.style.left = `${startX}px`; laser.style.top = `${startY}px`;
-                laser.style.transform = `rotate(${angle}rad)`;
-                document.body.appendChild(laser);
-                setTimeout(() => { laser.style.opacity = '0'; setTimeout(() => laser.remove(), 200); }, 40);
-                for (let i = 0; i < 2; i++) particles.current.push(new Particle(endX, endY, isGreen ? '#33ff77' : '#ffffff', 2));
-            };
-
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    if (!cubeRef.current || isDestroying) return;
-                    const rect = cubeRef.current.getBoundingClientRect();
-                    const cubeX = rect.left + rect.width / 2;
-                    const cubeY = rect.top + rect.height / 2;
-                    const cards = document.querySelectorAll('.service-card');
-                    cards.forEach((card, i) => {
-                        const cRect = card.getBoundingClientRect();
-                        if (cubeX >= cRect.left && cubeX <= cRect.right) setActiveCardIndex(i);
-                    });
-                    if (isTargeting && targetRect) {
-                        const tx = targetRect.left + Math.random() * targetRect.width;
-                        const ty = targetRect.top + Math.random() * targetRect.height;
-                        createLaser(cubeX, cubeY, tx, ty, 'diagnostic');
-                    }
-                }, 50);
-                return () => clearInterval(interval);
-            }, [isTargeting, targetRect, isDestroying]);
+            const projects = [
+                { id: "A-01", title: "Neural Mesh", cat: "Interface", year: "2024" },
+                { id: "A-02", title: "Vapor OS", cat: "Design System", year: "2024" },
+                { id: "A-03", title: "Onyx Protocol", cat: "Security", year: "2023" },
+                { id: "A-04", title: "Static Studio", cat: "Branding", year: "2023" },
+                { id: "A-05", title: "Grid Walker", cat: "Web Engine", year: "2024" },
+                { id: "A-06", title: "Void Core", cat: "Experimental", year: "2025" }
+            ];
 
             const handleDestruction = () => {
-                if (isDestroying) return;
                 setIsDestroying(true);
-                const rect = cubeRef.current.getBoundingClientRect();
-                const cubeX = rect.left + rect.width / 2;
-                const cubeY = rect.top + rect.height / 2;
-                const destroyInterval = setInterval(() => {
-                    const targets = document.querySelectorAll('.data-point');
-                    targets.forEach(t => {
-                        const tRect = t.getBoundingClientRect();
-                        createLaser(cubeX, cubeY, tRect.left + Math.random() * tRect.width, tRect.top + Math.random() * tRect.height, 'emergency');
-                    });
-                }, 80);
-                setTimeout(() => {
-                    clearInterval(destroyInterval);
-                    for (let i = 0; i < 100; i++) particles.current.push(new Particle(window.innerWidth / 2, window.innerHeight / 2, '#ffffff', 15));
-                    setTimeout(() => setIsDestroying(false), 1000);
-                }, 1500);
+                setTimeout(() => setIsDestroying(false), 2000);
             };
 
             return (
                 <div 
-                    className={`min-h-screen bg-[#050505] text-[#e0e0e0] font-mono selection:bg-[#33ff77] selection:text-black transition-all duration-700 ${isDestroying ? 'invert brightness-110' : ''}`}
+                    className={`min-h-screen transition-all duration-1000 ${isDestroying ? 'invert hue-rotate-90 scale-95' : ''}`}
                     onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
                 >
-                    <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
-                    <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,_transparent_0%,_black_100%)] pointer-events-none z-[1]" />
-                    
-                    <header className="fixed top-0 w-full px-6 md:px-12 py-8 flex justify-between items-start z-50">
-                        <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-4 group cursor-crosshair">
-                                <div className="w-4 h-4 border border-white flex items-center justify-center p-[2px]">
-                                    <div className="w-full h-full bg-white group-hover:scale-150 transition-transform duration-500" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[10px] tracking-[0.5em] uppercase font-bold text-white">Infinity Pixel</span>
-                                    <span className="text-[8px] tracking-[0.2em] opacity-40 uppercase">v2.0 // Studio OS</span>
-                                </div>
+                    <div className="fixed inset-0 perspective-grid z-0" />
+                    <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_50%,_transparent_0%,_#050505_100%)] pointer-events-none z-[1]" />
+
+                    {/* Navigation HUD */}
+                    <header className="fixed top-0 w-full p-8 flex justify-between items-start z-50">
+                        <div className="flex gap-4 items-center">
+                            <div className="w-6 h-6 border border-white flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white animate-pulse" />
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold tracking-[0.4em] uppercase">Infinity Pixel</span>
+                                <span className="text-[7px] opacity-40 uppercase tracking-widest">Registry Alpha-01</span>
                             </div>
                         </div>
-                        <nav className="flex flex-col items-end gap-2">
-                            <a 
-                                href="#"
-                                onMouseEnter={(e) => { setIsTargeting(true); setTargetRect(e.target.getBoundingClientRect()); }}
-                                onMouseLeave={() => setIsTargeting(false)}
-                                className="group relative px-6 py-2 border border-white/10 hover:border-[#33ff77] transition-all duration-300"
-                            >
-                                <div className="relative z-10 flex items-center gap-3 text-[10px] tracking-widest uppercase">
-                                    <Icon name="maximize-2" size={10} className="group-hover:rotate-90 transition-transform" /> 
-                                    Transmission
-                                </div>
-                            </a>
-                        </nav>
+                        <div className="flex flex-col items-end gap-2">
+                            <span className="text-[8px] opacity-30 uppercase tracking-[0.3em]">System Time: {new Date().toLocaleTimeString()}</span>
+                            <div className="text-[8px] text-[#33ff77] flex items-center gap-2">
+                                <span className="w-1 h-1 bg-[#33ff77] rounded-full animate-ping" />
+                                LIVE_NODE_09
+                            </div>
+                        </div>
                     </header>
 
-                    <main className="relative z-10 pt-40 flex flex-col items-center">
-                        <section className="min-h-[80vh] flex flex-col justify-center items-center px-6 max-w-6xl w-full text-center relative">
-                            <div className="data-point relative mb-12">
-                                <h1 className="text-5xl md:text-9xl font-black tracking-tighter uppercase leading-[0.85] text-white">
-                                    <span className="block hover:italic transition-all">Thoughtful</span>
-                                    <span className="block opacity-20">Software,</span>
-                                    <span className="block">Crafted.</span>
+                    <main className="relative z-10">
+                        {/* Hero Section */}
+                        <section className="h-screen flex flex-col justify-center items-center px-6">
+                            <div className="relative">
+                                <div className="absolute -top-12 -left-12 opacity-10">
+                                    <Icon name="maximize" size={100} />
+                                </div>
+                                <h1 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-none">
+                                    Digital <br/>
+                                    <span className="text-transparent stroke-text" style={{ WebkitTextStroke: '1px rgba(255,255,255,0.2)' }}>Studio.</span>
                                 </h1>
                             </div>
-                            <p className="data-point text-gray-400 max-w-lg text-[10px] md:text-xs leading-relaxed uppercase tracking-widest font-light opacity-60">
-                                Designing logic systems for a post-analog era.
-                            </p>
+                            <div className="mt-12 flex flex-col items-center gap-4">
+                                <div className="h-[1px] w-24 bg-white/20" />
+                                <p className="text-[10px] opacity-40 uppercase tracking-[0.5em] max-w-xs text-center">
+                                    Architecting high-fidelity brutalist interfaces for the next web.
+                                </p>
+                            </div>
                         </section>
 
-                        <section className="w-full max-w-6xl px-4 md:px-12 py-32 border-t border-white/5">
-                            <div className="relative h-[2px] w-full bg-white/5 mb-32">
-                                <div 
-                                    ref={cubeRef}
-                                    onClick={handleDestruction}
-                                    className="absolute top-1/2 -translate-y-1/2 w-8 h-8 border border-white cursor-pointer transition-all duration-300 flex items-center justify-center bg-black z-20"
-                                    style={{ animation: isDestroying ? 'none' : 'walk 15s linear infinite alternate', left: '0' }}
-                                >
-                                    <Icon name="crosshair" size={14} className={isDestroying ? 'text-red-500 animate-spin' : ''} />
-                                </div>
+                        {/* Projects Cube Grid */}
+                        <section className="max-w-7xl mx-auto px-6 py-32">
+                            <div className="flex justify-between items-end mb-12 border-b border-white/10 pb-4">
+                                <h2 className="text-[10px] font-bold tracking-[0.5em] uppercase">Artifact_Index</h2>
+                                <span className="text-[8px] opacity-30 uppercase">Filter: All_Systems</span>
                             </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+                                {projects.map((p, i) => (
+                                    <div key={i} className="pixel-border group bg-black/40 backdrop-blur-md p-10 h-80 flex flex-col justify-between relative overflow-hidden transition-all duration-500 hover:bg-white/5 cursor-crosshair">
+                                        <div className="scan-line group-hover:opacity-100" />
+                                        
+                                        <div className="flex justify-between items-start">
+                                            <span className="text-[10px] opacity-20">{p.id}</span>
+                                            <Icon name="box" size={14} className="opacity-10 group-hover:text-[#33ff77] group-hover:opacity-100" />
+                                        </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[1px] bg-white/10 border border-white/10">
-                                {[
-                                    { title: "Storytelling", icon: "dna" },
-                                    { title: "Interaction", icon: "mouse-pointer-2" },
-                                    { title: "Performance", icon: "zap" },
-                                    { title: "Global Core", icon: "globe" }
-                                ].map((item, i) => (
-                                    <div key={i} className={`service-card p-8 md:p-12 bg-[#050505] transition-all duration-500 relative group cursor-crosshair ${activeCardIndex === i ? 'bg-white/5' : ''}`}>
-                                        <Icon name={item.icon} size={18} className={`mb-6 transition-all ${activeCardIndex === i ? 'text-[#33ff77] scale-125' : 'opacity-20'}`} />
-                                        <h3 className="text-[10px] font-bold tracking-[0.3em] uppercase mb-4 text-white">{item.title}</h3>
-                                        <p className="text-[10px] text-gray-500 font-light uppercase">Active Systems Node.</p>
+                                        <div className="flex flex-col gap-2">
+                                            <h3 className="text-2xl font-black uppercase tracking-tighter group-hover:translate-x-2 transition-transform">
+                                                {p.title}
+                                            </h3>
+                                            <span className="text-[9px] uppercase tracking-widest text-[#33ff77] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {p.cat} // Ready
+                                            </span>
+                                        </div>
+
+                                        <div className="flex justify-between text-[8px] opacity-20 uppercase pt-4 border-t border-white/5">
+                                            <span>Sub_Node_{i}</span>
+                                            <span>{p.year}</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </section>
+
+                        {/* Interactive Walker Hub */}
+                        <section className="py-40 px-6 max-w-7xl mx-auto">
+                            <div className="relative h-[2px] w-full bg-white/5 overflow-visible">
+                                <div 
+                                    ref={cubeRef}
+                                    onClick={handleDestruction}
+                                    className="absolute top-1/2 -translate-y-1/2 w-10 h-10 border border-white bg-[#050505] cursor-pointer flex items-center justify-center group z-20 hover:border-[#33ff77] transition-colors"
+                                    style={{ animation: isDestroying ? 'none' : 'walk 20s linear infinite alternate', left: '0' }}
+                                >
+                                    <Icon name="zap" size={16} className={`group-hover:text-[#33ff77] ${isDestroying ? 'animate-bounce text-red-500' : ''}`} />
+                                </div>
+                            </div>
+                            <div className="mt-8 text-center">
+                                <span className="text-[8px] opacity-10 uppercase tracking-[1em]">Core_Engine_Loop_Active</span>
+                            </div>
+                        </section>
                     </main>
 
-                    <footer className="w-full px-6 py-20 flex flex-col md:flex-row justify-between items-center opacity-20 border-t border-white/5">
-                        <span className="text-[8px] tracking-[0.5em] uppercase font-bold">Infinity Pixel Hub // 2026</span>
-                        <div className="text-[8px] opacity-40 uppercase">Status: <span className="text-[#33ff77]">Online</span></div>
+                    <footer className="p-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center opacity-30">
+                        <span className="text-[9px] uppercase tracking-widest">Infinity Pixel Studio // 2026</span>
+                        <div className="flex gap-8 text-[9px] uppercase tracking-widest mt-4 md:mt-0">
+                            <a href="#" className="hover:text-white transition-colors">Github</a>
+                            <a href="#" className="hover:text-white transition-colors">Terminal</a>
+                            <a href="#" className="hover:text-white transition-colors">Nodes</a>
+                        </div>
                     </footer>
                 </div>
             );

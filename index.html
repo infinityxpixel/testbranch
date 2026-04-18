@@ -4,265 +4,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zagreb Quest: Digital Geocache</title>
+    <title>Zagreb Pub Lore: The Premium Guide</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;600;800&display=swap');
         
         :root {
-            --primary: #2563eb;
-            --success: #10b981;
-            --bg: #0a0c14;
+            --gold: #d4af37;
+            --dark-bg: #0f1115;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: white;
+            background-color: var(--dark-bg);
+            color: #e2e8f0;
             -webkit-tap-highlight-color: transparent;
         }
 
+        h1, h2 { font-family: 'Playfair Display', serif; }
+
         .glass-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
         }
 
-        .premium-lock-tag {
-            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-            color: #000;
-            font-size: 9px;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 6px;
-            text-transform: uppercase;
+        .premium-border {
+            border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
-        .pulse-active {
-            animation: pulse-ring 2s infinite;
-            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+        .gold-text { color: var(--gold); }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
+            color: black;
         }
 
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+        .sepia-img {
+            filter: sepia(0.3) contrast(1.1);
+            border-radius: 12px;
         }
 
-        .btn-gradient {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            transition: all 0.2s ease;
-        }
-
-        .btn-gradient:active { transform: scale(0.97); }
-
-        .modal-enter { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        .scroll-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="min-h-screen pb-10">
+<body class="min-h-screen">
 
-    <!-- Header -->
-    <nav class="p-6 flex justify-between items-center bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md">
-        <div>
-            <h1 class="text-2xl font-black text-white tracking-tighter uppercase">Zagreb Quest</h1>
-            <div id="gps-status" class="text-[10px] text-blue-400 font-mono font-bold tracking-widest">GPS: INITIALIZING...</div>
-        </div>
-        <div id="pay-status-badge" class="px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-400">
-            LOADING...
-        </div>
-    </nav>
-
-    <!-- Content Area -->
-    <main class="px-5 mt-6 space-y-6 max-w-lg mx-auto">
-        
-        <!-- Active Target Panel -->
-        <section id="tracker-box" class="glass-card p-6 border-blue-500/30 border-2 overflow-hidden">
-            <h2 id="target-name" class="text-xl font-bold text-white">Choose your path</h2>
-            <p id="target-hint" class="text-slate-400 text-sm mt-1 italic">Lotrščak Tower is your first free mission.</p>
-            
-            <div id="meter-ui" class="mt-8 hidden">
-                <div class="flex justify-between items-end mb-3">
-                    <span class="text-4xl font-mono font-black text-white" id="dist-val">---m</span>
-                    <span class="text-[10px] text-blue-400 font-bold tracking-widest mb-1">TO TARGET</span>
-                </div>
-                <div class="w-full h-4 bg-slate-900 rounded-full p-1 border border-white/5">
-                    <div id="dist-bar" class="h-full bg-blue-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-                <p class="text-[10px] text-center mt-3 text-slate-500">Get within 20 meters to unlock the story.</p>
+    <!-- PAYWALL OVERLAY -->
+    <div id="paywall" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6 hidden">
+        <div class="max-w-md w-full text-center space-y-8">
+            <div class="space-y-2">
+                <span class="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">Exclusive Access</span>
+                <h1 class="text-5xl font-black text-white leading-none">The Zagreb<br><span class="gold-text">Pub Lore</span></h1>
+                <p class="text-slate-400 text-sm py-4">Unlock the definitive guide to Zagreb's legendary drinking holes. 10 hidden gems, their centuries-old stories, and a GPS-linked map.</p>
             </div>
-        </section>
 
-        <!-- Location Selection -->
-        <section class="space-y-3" id="location-list">
-            <!-- Locations injected here -->
-        </section>
-
-        <!-- Premium Paywall -->
-        <section id="paywall-card" class="glass-card p-8 text-center border-amber-500/40 border-2 hidden bg-amber-950/10">
-            <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8">
-                  <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clip-rule="evenodd" />
-                </svg>
+            <div class="glass-card p-6 border-amber-500/20 border text-left space-y-4">
+                <div class="flex items-start gap-3">
+                    <span class="text-amber-500">✔</span>
+                    <p class="text-xs text-slate-300"><strong>10 Curated Pubs:</strong> From the oldest tavern to hidden craft havens.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="text-amber-500">✔</span>
+                    <p class="text-xs text-slate-300"><strong>Deep Lore:</strong> Stories of movie stars, secret societies, and local legends.</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="text-amber-500">✔</span>
+                    <p class="text-xs text-slate-300"><strong>GPS Tracking:</strong> Real-time distance to every pint.</p>
+                </div>
             </div>
-            <h3 class="text-2xl font-black mb-2 uppercase tracking-tight">Expand the City</h3>
-            <p class="text-slate-300 text-sm mb-6 leading-relaxed">The tour doesn't end in the Upper Town. Unlock 4 more iconic Zagreb locations across the city.</p>
-            <!-- REPLACE THIS WITH YOUR STRIPE PAYMENT LINK -->
-            <a href="https://buy.stripe.com/YOUR_ZAGREB_STRIPE_LINK" class="block w-full py-4 rounded-xl btn-gradient font-bold uppercase tracking-widest text-sm shadow-xl shadow-blue-600/30">
-                Unlock Zagreb Full Quest
-            </a>
-            <p class="text-[10px] text-slate-500 mt-4 italic">One-time purchase. Permanent access.</p>
-        </section>
-    </main>
 
-    <!-- UI Modal -->
-    <div id="modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 hidden">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeModal()"></div>
-        <div class="glass-card w-full max-w-sm p-8 relative modal-enter bg-slate-900 border-white/20">
-            <div id="modal-icon" class="text-4xl mb-4"></div>
-            <h3 id="modal-title" class="text-2xl font-black mb-4 leading-tight"></h3>
-            <div id="modal-body" class="text-slate-300 leading-relaxed text-sm overflow-y-auto max-h-60 pr-2"></div>
-            <button onclick="closeModal()" class="mt-8 w-full py-4 rounded-xl bg-white text-black font-black uppercase tracking-widest text-xs">Back to Map</button>
+            <div class="space-y-4 pt-4">
+                <a href="https://buy.stripe.com/YOUR_PAYMENT_LINK_3_EURO" class="block w-full py-5 rounded-2xl btn-gold font-black uppercase tracking-widest text-sm shadow-2xl shadow-amber-500/20">
+                    Unlock Guide — 3€
+                </a>
+                <p class="text-[10px] text-slate-600">Secure payment via Stripe. Redirects automatically after purchase.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTENT -->
+    <div id="main-content" class="max-w-xl mx-auto hidden">
+        <header class="p-8 pb-4">
+            <h1 class="text-3xl font-black italic gold-text tracking-tighter">ZAGREB PUB LORE</h1>
+            <div id="gps-status" class="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-widest">GPS: Initializing...</div>
+        </header>
+
+        <!-- Current Target UI -->
+        <div id="active-panel" class="px-6 mb-8 hidden">
+            <div class="glass-card p-6 premium-border pulse-active">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Tracking Pint</span>
+                        <h2 id="active-name" class="text-2xl font-black">---</h2>
+                    </div>
+                    <button onclick="stopTracking()" class="text-slate-500 text-xs">Cancel</button>
+                </div>
+                <div class="flex items-end justify-between">
+                    <span id="dist-val" class="text-4xl font-mono font-black gold-text">---m</span>
+                    <div class="w-1/2 h-2 bg-slate-800 rounded-full overflow-hidden mb-2">
+                        <div id="dist-bar" class="h-full bg-amber-500" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pub List -->
+        <div class="px-6 space-y-4 pb-20" id="pub-list">
+            <!-- Injected by JS -->
+        </div>
+    </div>
+
+    <!-- Modal for Lore -->
+    <div id="lore-modal" class="fixed inset-0 z-[150] flex items-end justify-center p-4 hidden">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="closeLore()"></div>
+        <div class="glass-card w-full max-w-lg p-8 relative animate-slide-up bg-[#15181e] border-t border-white/10">
+            <h2 id="modal-title" class="text-3xl font-black mb-2 gold-text"></h2>
+            <div id="modal-lore" class="text-slate-300 text-sm leading-relaxed mb-8 max-h-[50vh] overflow-y-auto pr-2"></div>
+            <button onclick="closeLore()" class="w-full py-4 rounded-xl bg-white text-black font-black uppercase text-xs tracking-widest">Return to Guide</button>
         </div>
     </div>
 
     <script>
-        // CONFIG
-        const THRESHOLD = 20; 
-
-        const LOCATIONS = [
-            { id: 'lotrscak', isPremium: false, name: 'Lotrščak Tower', lat: 45.8143, lng: 15.9734, hint: 'Listen for the noon cannon', story: 'You are standing beneath the Lotrščak Tower, one of the best-preserved structures of the city\'s 13th-century defensive system. Every single day for over 140 years, the Grič cannon has been fired from this window at exactly noon. Legends say it saved the city from the Turks by hitting a rooster being carried to the Pasha\'s tent!' },
-            { id: 'cathedral', isPremium: true, name: 'Zagreb Cathedral', lat: 45.8144, lng: 15.9791, hint: 'Find the twin spires', story: 'The Cathedral of the Assumption of the Blessed Virgin Mary is the tallest building in Croatia. Its neo-Gothic spires define the city skyline. Look closely at the walls - you can still see the old fortifications built to defend against the Ottoman Empire.' },
-            { id: 'jelacic', isPremium: true, name: 'Ban Jelačić Square', lat: 45.8130, lng: 15.9772, hint: 'Meet me "under the tail"', story: 'The main pulse of Zagreb. The statue of Ban Josip Jelačić once faced north toward Hungary in a gesture of defiance, but today it is the city\'s most popular meeting point. Just below the surface flows the Medveščak stream, which fueled the city\'s earliest mills.' },
-            { id: 'zrinjevac', isPremium: true, name: 'Zrinjevac Park', lat: 45.8094, lng: 15.9781, hint: 'The Green Horseshoe', story: 'A masterpiece of urban planning. This park features an 18th-century music pavilion and a famous meteorological column. It is the first of seven squares that form the "Lenuci Horseshoe," a green belt that keeps Zagreb breathing.' },
-            { id: 'maksimir', isPremium: true, name: 'Maksimir Park', lat: 45.8233, lng: 16.0203, hint: 'The city\'s oldest forest', story: 'Founded in 1794, Maksimir was the first public park in South-Eastern Europe. It was designed in the English landscape style, meant to look like a natural forest. It remains a sanctuary for locals and the home of the city zoo.' }
+        const PUBS = [
+            { id: 1, name: "Pod starim krovovima", lat: 45.8173, lng: 15.9744, lore: "The legendary 'Old Roofs' is the oldest continuously running tavern in Zagreb (est. 1830). Originally a private wine cellar, it became immortalized in the cult Croatian film 'Tko pjeva zlo ne misli' (He Who Sings Means No Harm) under the nickname 'K Šnidaršiću'. Walking inside is a literal time-portal to 19th-century Gornji Grad." },
+            { id: 2, name: "Tolkien's House", lat: 45.8166, lng: 15.9754, lore: "The pioneer of craft beer culture in Zagreb. Founded in 1996 when locals only knew generic lagers, this pub taught the city what Ale tasted like. It's tucked away at the end of Opatovina, packed with LOTR memorabilia and a cozy atmosphere that feels like a hobbit hole." },
+            { id: 3, name: "Krolo", lat: 45.8139, lng: 15.9751, lore: "Named after the famous writer Miroslav Krleža who lived next door. This is a classic 'pajzl'—a slang term for a cozy, unpretentious local dive. The wood-paneled interior hasn't changed since the 1980s, preserving the authentic bohemian spirit of socialist Yugoslavia." },
+            { id: 4, name: "Mali Medo", lat: 45.8148, lng: 15.9759, lore: "The flagship pub of the Medvedgrad brewery, the first family-owned craft brewery in Croatia. Its name means 'Little Bear', and it sits on Tkalčićeva street, which used to be a stream dividing two medieval towns. Their beers are named after local legends like the 'Witch of Grič'." },
+            { id: 5, name: "Craft Room", lat: 45.8160, lng: 15.9752, lore: "The first true craft-only beer bar in the city. Located on the 'Beer Street' (Opatovina), it converted a former residential flat into a series of rooms with 12+ rotating taps. It serves as the unofficial HQ for the new wave of Croatian independent brewers." },
+            { id: 6, name: "Old Pharmacy Pub", lat: 45.8122, lng: 15.9734, lore: "Decorated like an old apothecary with sepia photos and brass fixtures. This pub sits near the site where the city's first public pharmacies operated. It is one of the best spots to find premium Irish whiskeys and British-style ales in a library-like setting." },
+            { id: 7, name: "Bacchus Jazz Bar", lat: 45.8055, lng: 15.9789, lore: "A hidden garden retreat near the Main Station. Named after the Roman god of wine, it’s famous for its tiny courtyard and a lemon tree. It’s a sanctuary for artists and jazz lovers, capturing the 1920s intellectual vibe of Zagreb." },
+            { id: 8, name: "Valhalla Beer Bar", lat: 45.8144, lng: 15.9750, lore: "The heavy metal heart of Zagreb's craft scene. While the theme is Viking/Norse, the selection is purely top-tier local craft. It’s known for serving the strongest IPAs in town and being the gateway to the 'Radićeva' bar crawl." },
+            { id: 9, name: "The Beertija", lat: 45.8071, lng: 15.9774, lore: "Famous for its 'Rock Star' terrace featuring statues of rock legends like Lemmy and Joe Strummer. Located in a courtyard near the Pavilion, it offers one of the largest bottled beer selections in the country." },
+            { id: 10, name: "Blato", lat: 45.8118, lng: 15.9702, lore: "Part of the legendary 'Bermuda Triangle' of Zagreb bars in the 80s (along with Kavkaz and Zvečka). It was the gathering point for the 'Novi Val' (New Wave) musicians and artists. It still maintains a traditional Dalmatian 'konoba' feel in the center of the city." }
         ];
 
-        // STATE
-        let isUnlocked = localStorage.getItem('quest_premium_zg') === 'true';
-        let completed = JSON.parse(localStorage.getItem('quest_done_zg') || '[]');
+        let isUnlocked = localStorage.getItem('zg_pub_unlocked') === 'true';
         let activeId = null;
         let userCoords = null;
 
         function init() {
-            // Check success param
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('success') === 'true') {
                 isUnlocked = true;
-                localStorage.setItem('quest_premium_zg', 'true');
-                showModal("Purchase Successful!", "Welcome to the full Zagreb Quest. Explore all landmarks and discover the city's deepest secrets.", "🏰");
+                localStorage.setItem('zg_pub_unlocked', 'true');
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
 
-            renderUI();
-            startTracking();
-        }
-
-        function renderUI() {
-            const list = document.getElementById('location-list');
-            const paywall = document.getElementById('paywall-card');
-            const badge = document.getElementById('pay-status-badge');
-            
-            badge.innerText = isUnlocked ? "FULL ACCESS" : "STARTER PACK";
-            badge.className = isUnlocked ? "px-3 py-1 rounded-full text-[10px] font-bold border border-blue-500 text-blue-500" : "px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700 text-slate-500";
-
-            list.innerHTML = '';
-            LOCATIONS.forEach(loc => {
-                const isLocked = loc.isPremium && !isUnlocked;
-                const isDone = completed.includes(loc.id);
-                const isActive = activeId === loc.id;
-
-                const card = document.createElement('div');
-                card.className = `glass-card p-5 flex justify-between items-center transition-all ${isLocked ? 'opacity-40' : 'cursor-pointer active:scale-95'} ${isActive ? 'ring-2 ring-blue-500 pulse-active' : ''}`;
-                
-                card.onclick = () => {
-                    if (isLocked) {
-                        paywall.scrollIntoView({ behavior: 'smooth' });
-                        paywall.classList.add('pulse-active');
-                        setTimeout(() => paywall.classList.remove('pulse-active'), 1000);
-                    } else if (isDone) {
-                        showModal(loc.name, loc.story, "📖");
-                    } else {
-                        setActive(loc.id);
-                    }
-                };
-
-                card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center ${isDone ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500'} font-bold">
-                            ${isDone ? '✓' : (isActive ? '🎯' : '📍')}
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm text-white">${loc.name}</h4>
-                                ${isLocked ? '<span class="premium-lock-tag">Locked</span>' : ''}
-                            </div>
-                            <p class="text-[10px] text-slate-500 font-medium uppercase tracking-wider">${isDone ? 'History Unlocked' : loc.hint}</p>
-                        </div>
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-
-            if (completed.includes('lotrscak') && !isUnlocked) {
-                paywall.classList.remove('hidden');
+            if (!isUnlocked) {
+                document.getElementById('paywall').classList.remove('hidden');
+            } else {
+                document.getElementById('main-content').classList.remove('hidden');
+                renderList();
+                startGPS();
             }
         }
 
-        function setActive(id) {
+        function renderList() {
+            const list = document.getElementById('pub-list');
+            list.innerHTML = '';
+            PUBS.forEach(pub => {
+                const card = document.createElement('div');
+                card.className = "glass-card p-5 flex justify-between items-center cursor-pointer transition-transform active:scale-95";
+                card.onclick = () => showLore(pub);
+                card.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500 font-black text-xs">
+                            ${pub.id}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">${pub.name}</h3>
+                            <button onclick="event.stopPropagation(); startTracking(${pub.id})" class="text-[10px] text-amber-500 font-black uppercase tracking-widest mt-0.5">Start Navigation</button>
+                        </div>
+                    </div>
+                    <span class="text-slate-600">→</span>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function startTracking(id) {
             activeId = id;
-            const loc = LOCATIONS.find(l => l.id === id);
-            document.getElementById('target-name').innerText = loc.name;
-            document.getElementById('target-hint').innerText = "Navigate to the site";
-            document.getElementById('meter-ui').classList.remove('hidden');
-            renderUI();
+            const pub = PUBS.find(p => p.id === id);
+            document.getElementById('active-name').innerText = pub.name;
+            document.getElementById('active-panel').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             updateDistance();
         }
 
-        function startTracking() {
+        function stopTracking() {
+            activeId = null;
+            document.getElementById('active-panel').classList.add('hidden');
+        }
+
+        function startGPS() {
             if (!navigator.geolocation) return;
             navigator.geolocation.watchPosition(
                 (pos) => {
                     userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    document.getElementById('gps-status').innerText = `GPS: ACCURACY ±${Math.round(pos.coords.accuracy)}M`;
+                    document.getElementById('gps-status').innerText = `GPS: ACTIVE (±${Math.round(pos.coords.accuracy)}m)`;
                     updateDistance();
                 },
-                (err) => { document.getElementById('gps-status').innerText = "GPS: SIGNAL LOST (ENABLE PERMISSIONS)"; },
+                () => { document.getElementById('gps-status').innerText = "GPS: ERROR (Permissions?)"; },
                 { enableHighAccuracy: true }
             );
         }
 
         function updateDistance() {
             if (!userCoords || !activeId) return;
-            const target = LOCATIONS.find(l => l.id === activeId);
-            const dist = getDistance(userCoords.lat, userCoords.lng, target.lat, target.lng);
-            
+            const pub = PUBS.find(p => p.id === activeId);
+            const dist = haversine(userCoords.lat, userCoords.lng, pub.lat, pub.lng);
             document.getElementById('dist-val').innerText = `${Math.round(dist)}m`;
-            
-            const progress = Math.max(5, Math.min(100, 100 - (dist / 10))); // Scale 0-1km
+            const progress = Math.max(0, Math.min(100, 100 - (dist / 10))); 
             document.getElementById('dist-bar').style.width = `${progress}%`;
-
-            if (dist <= THRESHOLD) {
-                completeMission(activeId);
-            }
         }
 
-        function completeMission(id) {
-            if (!completed.includes(id)) {
-                completed.push(id);
-                localStorage.setItem('quest_done_zg', JSON.stringify(completed));
-                const loc = LOCATIONS.find(l => l.id === id);
-                showModal(loc.name, loc.story, "🏆 MISSION ACCOMPLISHED");
-                activeId = null;
-                document.getElementById('meter-ui').classList.add('hidden');
-                document.getElementById('target-name').innerText = "Where to next?";
-                document.getElementById('target-hint').innerText = "Select another landmark to explore.";
-                renderUI();
-            }
-        }
-
-        function getDistance(lat1, lon1, lat2, lon2) {
+        function haversine(lat1, lon1, lat2, lon2) {
             const R = 6371e3;
             const dLat = (lat2-lat1)*Math.PI/180;
             const dLon = (lon2-lon1)*Math.PI/180;
@@ -270,15 +228,14 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
 
-        function showModal(title, body, icon) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-body').innerText = body;
-            document.getElementById('modal-icon').innerText = icon;
-            document.getElementById('modal').classList.remove('hidden');
+        function showLore(pub) {
+            document.getElementById('modal-title').innerText = pub.name;
+            document.getElementById('modal-lore').innerText = pub.lore;
+            document.getElementById('lore-modal').classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
+        function closeLore() {
+            document.getElementById('lore-modal').classList.add('hidden');
         }
 
         window.onload = init;

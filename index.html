@@ -1,246 +1,553 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Zagreb Pub Lore: The Premium Guide</title>
+    <!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-M9HZM3X5');</script>
+<!-- End Google Tag Manager -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinity Pixel - IT Solutions</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='25' y='25' width='50' height='50' fill='white' rx='5'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;600;800&display=swap');
-        
-        :root {
-            --gold: #d4af37;
-            --dark-bg: #0f1115;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--dark-bg);
-            color: #e2e8f0;
-            -webkit-tap-highlight-color: transparent;
+            background-color: #0a0a0a;
+            color: #ececec;
+            margin: 0;
+            overflow-x: hidden;
+            cursor: auto;
         }
 
-        h1, h2 { font-family: 'Playfair Display', serif; }
-
-        .glass-card {
-            background: rgba(30, 41, 59, 0.45);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
         }
 
-        .premium-border {
-            border: 1px solid rgba(212, 175, 55, 0.3);
+        .grid-wrapper {
+            width: 100%;
+            max-width: 1152px;
+            position: relative;
+            z-index: 10;
+            transition: transform 3s cubic-bezier(0.7, 0, 0.3, 1), opacity 2s ease;
         }
 
-        .gold-text { color: var(--gold); }
-        
-        .btn-gold {
-            background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%);
-            color: black;
+        .pixel-track {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1) 10%, rgba(255, 255, 255, 0.1) 90%, transparent);
+            position: relative;
+            margin-bottom: 56px;
+            overflow: visible;
         }
 
-        .sepia-img {
-            filter: sepia(0.3) contrast(1.1);
-            border-radius: 12px;
+        .walking-pixel-container {
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            animation: walk-grid-bounds 65s linear infinite;
+            z-index: 100;
+            pointer-events: auto;
+            cursor: pointer;
         }
 
-        .scroll-hide::-webkit-scrollbar { display: none; }
+        .paused { animation-play-state: paused !important; }
+
+        .pixel-cube {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            background: #ffffff;
+            box-shadow: inset -4px -4px 0 rgba(0,0,0,0.1), 0 0 15px rgba(255,255,255,0.4);
+            animation: cube-bounce 0.8s ease-in-out infinite alternate;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Destruction State Styles */
+        .destroy-mode .pixel-cube {
+            background: #ff0000 !important;
+            box-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000 !important;
+            animation: cube-shake 0.1s infinite !important;
+        }
+
+        @keyframes cube-shake {
+            0% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -1px); }
+            100% { transform: translate(1px, 1px); }
+        }
+
+        .scanned-text, .hero-subline, .hero-description, .modest-card, .upcoming-btn-container {
+            display: inline-block;
+            transition: color 0.3s ease, text-shadow 0.3s ease, opacity 0.5s ease, transform 3s cubic-bezier(0.7, 0, 0.3, 1);
+        }
+
+        .is-disintegrating {
+            animation: text-glitch-destroy 0.2s infinite !important;
+            color: #ff4d4d !important;
+            text-shadow: 0 0 20px #ff0000 !important;
+        }
+
+        @keyframes text-glitch-destroy {
+            0% { transform: translate(0); }
+            50% { transform: translate(-2px, 2px); }
+            100% { transform: translate(0); }
+        }
+
+        .spectrum-array {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transform: translate(10px, -50%);
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .structured-beam {
+            height: 2px;
+            width: 0;
+            opacity: 0;
+            border-radius: 2px;
+            transform-origin: left center;
+            animation: structured-shoot 2s infinite;
+        }
+
+        .beam-red    { background: #ff4d4d; animation-delay: 0.0s; box-shadow: 0 0 8px #ff4d4d; }
+        .beam-yellow { background: #ffd11a; animation-delay: 0.2s; box-shadow: 0 0 8px #ffd11a; }
+        .beam-green  { background: #33ff77; animation-delay: 0.4s; box-shadow: 0 0 8px #33ff77; }
+        .beam-blue   { background: #3399ff; animation-delay: 0.6s; box-shadow: 0 0 8px #3399ff; }
+
+        @keyframes walk-grid-bounds {
+            0% { left: 0%; transform: scaleX(1); }
+            50% { left: calc(100% - 24px); transform: scaleX(-1); }
+            100% { left: 0%; transform: scaleX(1); }
+        }
+
+        @keyframes cube-bounce {
+            from { transform: translateY(0) scaleY(1); }
+            to { transform: translateY(-10px) scaleY(0.8); }
+        }
+
+        @keyframes structured-shoot {
+            0% { width: 0; opacity: 0; transform: translateX(0); }
+            10% { opacity: 1; }
+            40% { width: 60px; opacity: 1; }
+            100% { width: 140px; opacity: 0; transform: translateX(60px); }
+        }
+
+        .modest-card {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 20;
+        }
+
+        .dot-indicator {
+            width: 4px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 50%;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .reveal { opacity: 0; animation: simpleFade 1s ease forwards; }
+        @keyframes simpleFade { from { opacity: 0; } to { opacity: 1; } }
+
+        .laser-visual {
+            position: fixed;
+            pointer-events: none;
+            background: #ff0000;
+            box-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000;
+            z-index: 90;
+            height: 3px;
+            transform-origin: left center;
+        }
+
+        /* Target Green Beam */
+        .laser-target {
+            background: #33ff77 !important;
+            box-shadow: 0 0 15px #33ff77, 0 0 30px #33ff77 !important;
+        }
+
+        /* Flash Overlay */
+        #flash-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .do-flash { animation: screen-flash 0.8s ease-out forwards; }
+        @keyframes screen-flash {
+            0% { opacity: 0; }
+            10% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .btn-green {
+            background: transparent;
+            color: #33ff77;
+            border: 1px solid rgba(51, 255, 119, 0.2);
+            padding: 12px 32px;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .btn-green:hover {
+            border-color: rgba(51, 255, 119, 0.8);
+            background: rgba(51, 255, 119, 0.05);
+            box-shadow: 0 0 20px rgba(51, 255, 119, 0.1);
+        }
+
+        section { padding: 100px 0; width: 100%; max-width: 1152px; }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="flex flex-col items-center">
+    <!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M9HZM3X5"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 
-    <!-- PAYWALL OVERLAY -->
-    <div id="paywall" class="fixed inset-0 z-[100] bg-black flex items-center justify-center p-6 hidden">
-        <div class="max-w-md w-full text-center space-y-8">
-            <div class="space-y-2">
-                <span class="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">Exclusive Access</span>
-                <h1 class="text-5xl font-black text-white leading-none">The Zagreb<br><span class="gold-text">Pub Lore</span></h1>
-                <p class="text-slate-400 text-sm py-4">Unlock the definitive guide to Zagreb's legendary drinking holes. 10 hidden gems, their centuries-old stories, and a GPS-linked map.</p>
-            </div>
+    <div id="flash-overlay"></div>
+    <canvas id="particle-canvas"></canvas>
 
-            <div class="glass-card p-6 border-amber-500/20 border text-left space-y-4">
-                <div class="flex items-start gap-3">
-                    <span class="text-amber-500">✔</span>
-                    <p class="text-xs text-slate-300"><strong>10 Curated Pubs:</strong> From the oldest tavern to hidden craft havens.</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="text-amber-500">✔</span>
-                    <p class="text-xs text-slate-300"><strong>Deep Lore:</strong> Stories of movie stars, secret societies, and local legends.</p>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="text-amber-500">✔</span>
-                    <p class="text-xs text-slate-300"><strong>GPS Tracking:</strong> Real-time distance to every pint.</p>
-                </div>
-            </div>
-
-            <div class="space-y-4 pt-4">
-                <a href="https://buy.stripe.com/YOUR_PAYMENT_LINK_3_EURO" class="block w-full py-5 rounded-2xl btn-gold font-black uppercase tracking-widest text-sm shadow-2xl shadow-amber-500/20">
-                    Unlock Guide — 3€
-                </a>
-                <p class="text-[10px] text-slate-600">Secure payment via Stripe. Redirects automatically after purchase.</p>
-            </div>
+    <header class="p-8 md:p-10 flex justify-between items-center w-full fixed top-0 z-50 bg-transparent">
+        <div class="flex items-center group cursor-pointer">
+            <div class="w-6 h-6 bg-white rounded-sm transition-transform group-hover:rotate-45"></div>
+            <span class="ml-4 text-xs tracking-[0.3em] uppercase font-light opacity-50">Infinity Pixel</span>
         </div>
-    </div>
+        <nav class="flex gap-10">
+            <a href="mailto:infinitypixelhub@proton.me" class="btn-green hover-target">Contact</a>
+        </nav>
+    </header>
 
-    <!-- MAIN APP CONTENT -->
-    <div id="main-content" class="max-w-xl mx-auto hidden">
-        <header class="p-8 pb-4">
-            <h1 class="text-3xl font-black italic gold-text tracking-tighter">ZAGREB PUB LORE</h1>
-            <div id="gps-status" class="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-widest">GPS: Initializing...</div>
-        </header>
+    <main class="flex-grow flex flex-col items-center px-8 w-full relative z-10">
+        
+        <!-- Hero Section -->
+        <section class="min-h-screen flex flex-col justify-center items-center pt-20">
+            <div class="text-center max-w-3xl mb-24 reveal" style="animation-delay: 0.2s">
+                <h1 class="text-4xl md:text-6xl font-normal tracking-tight mb-8" id="hero-title">
+                    <span class="scanned-text">Thoughtful</span> <span class="scanned-text">software,</span> <br>
+                    <span class="hero-subline opacity-40">carefully crafted.</span>
+                </h1>
+                <p class="text-gray-500 font-light leading-relaxed md:px-20 text-lg hero-description transition-opacity duration-1000">
+                    A digital studio bridging the gap between artistic vision and technical precision.
+                </p>
+            </div>
 
-        <!-- Current Target UI -->
-        <div id="active-panel" class="px-6 mb-8 hidden">
-            <div class="glass-card p-6 premium-border pulse-active">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <span class="text-[10px] text-amber-500 font-bold uppercase tracking-widest">Tracking Pint</span>
-                        <h2 id="active-name" class="text-2xl font-black">---</h2>
-                    </div>
-                    <button onclick="stopTracking()" class="text-slate-500 text-xs">Cancel</button>
-                </div>
-                <div class="flex items-end justify-between">
-                    <span id="dist-val" class="text-4xl font-mono font-black gold-text">---m</span>
-                    <div class="w-1/2 h-2 bg-slate-800 rounded-full overflow-hidden mb-2">
-                        <div id="dist-bar" class="h-full bg-amber-500" style="width: 0%"></div>
+            <!-- Interaction Zone -->
+            <div class="grid-wrapper reveal" style="animation-delay: 0.4s" id="interaction-zone">
+                <div class="pixel-track">
+                    <div class="walking-pixel-container" id="cube-container">
+                        <div class="pixel-cube"></div>
+                        <div class="spectrum-array">
+                            <div class="structured-beam beam-red"></div>
+                            <div class="structured-beam beam-yellow"></div>
+                            <div class="structured-beam beam-green"></div>
+                            <div class="structured-beam beam-blue"></div>
+                        </div>
                     </div>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16" id="service-grid">
+                    <div class="modest-card p-10 rounded-sm">
+                        <div class="dot-indicator mb-6"></div>
+                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Compelling Storytelling</h3>
+                        <p class="text-xs text-gray-600 leading-relaxed">We weave your brand’s unique narrative into every pixel, creating emotional connections that resonate deeply and turn visitors into advocates.</p>
+                    </div>
+                    <div class="modest-card p-10 rounded-sm">
+                        <div class="dot-indicator mb-6"></div>
+                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Focus on Interactive Elements</h3>
+                        <p class="text-xs text-gray-600 leading-relaxed">Engage your audience with intuitive, responsive features. We prioritize tactile digital experiences that encourage exploration and keep users scrolling for more.</p>
+                    </div>
+                    <div class="modest-card p-10 rounded-sm">
+                        <div class="dot-indicator mb-6"></div>
+                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Superfast Code Execution</h3>
+                        <p class="text-xs text-gray-600 leading-relaxed">Performance is our priority. Our lean, optimized backend ensures lightning-fast load times and seamless transitions for a frictionless user experience.</p>
+                    </div>
+                    <div class="modest-card p-10 rounded-sm">
+                        <div class="dot-indicator mb-6"></div>
+                        <h3 class="text-sm font-semibold mb-3 tracking-wide uppercase">Websites That Come to Life</h3>
+                        <p class="text-xs text-gray-600 leading-relaxed">We don’t do static. We build dynamic, breathing digital ecosystems fueled by motion, real-time data, and vibrant, purposeful animation.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center upcoming-btn-container reveal" style="animation-delay: 0.5s">
+                    <a href="https://infinityxpixel.github.io/blankedgame/" target="_blank" class="btn-green hover-target">
+                        Upcoming Game: Blanked
+                    </a>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Pub List -->
-        <div class="px-6 space-y-4 pb-20" id="pub-list">
-            <!-- Injected by JS -->
-        </div>
-    </div>
+    </main>
 
-    <!-- Modal for Lore -->
-    <div id="lore-modal" class="fixed inset-0 z-[150] flex items-end justify-center p-4 hidden">
-        <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="closeLore()"></div>
-        <div class="glass-card w-full max-w-lg p-8 relative animate-slide-up bg-[#15181e] border-t border-white/10">
-            <h2 id="modal-title" class="text-3xl font-black mb-2 gold-text"></h2>
-            <div id="modal-lore" class="text-slate-300 text-sm leading-relaxed mb-8 max-h-[50vh] overflow-y-auto pr-2"></div>
-            <button onclick="closeLore()" class="w-full py-4 rounded-xl bg-white text-black font-black uppercase text-xs tracking-widest">Return to Guide</button>
-        </div>
-    </div>
+    <footer class="p-10 w-full flex justify-center items-center text-[10px] tracking-widest text-gray-600 uppercase border-t border-white/5 relative z-10">
+        <div>&copy;2026 Infinity Pixel</div>
+    </footer>
 
     <script>
-        const PUBS = [
-            { id: 1, name: "Pod starim krovovima", lat: 45.8173, lng: 15.9744, lore: "The legendary 'Old Roofs' is the oldest continuously running tavern in Zagreb (est. 1830). Originally a private wine cellar, it became immortalized in the cult Croatian film 'Tko pjeva zlo ne misli' (He Who Sings Means No Harm) under the nickname 'K Šnidaršiću'. Walking inside is a literal time-portal to 19th-century Gornji Grad." },
-            { id: 2, name: "Tolkien's House", lat: 45.8166, lng: 15.9754, lore: "The pioneer of craft beer culture in Zagreb. Founded in 1996 when locals only knew generic lagers, this pub taught the city what Ale tasted like. It's tucked away at the end of Opatovina, packed with LOTR memorabilia and a cozy atmosphere that feels like a hobbit hole." },
-            { id: 3, name: "Krolo", lat: 45.8139, lng: 15.9751, lore: "Named after the famous writer Miroslav Krleža who lived next door. This is a classic 'pajzl'—a slang term for a cozy, unpretentious local dive. The wood-paneled interior hasn't changed since the 1980s, preserving the authentic bohemian spirit of socialist Yugoslavia." },
-            { id: 4, name: "Mali Medo", lat: 45.8148, lng: 15.9759, lore: "The flagship pub of the Medvedgrad brewery, the first family-owned craft brewery in Croatia. Its name means 'Little Bear', and it sits on Tkalčićeva street, which used to be a stream dividing two medieval towns. Their beers are named after local legends like the 'Witch of Grič'." },
-            { id: 5, name: "Craft Room", lat: 45.8160, lng: 15.9752, lore: "The first true craft-only beer bar in the city. Located on the 'Beer Street' (Opatovina), it converted a former residential flat into a series of rooms with 12+ rotating taps. It serves as the unofficial HQ for the new wave of Croatian independent brewers." },
-            { id: 6, name: "Old Pharmacy Pub", lat: 45.8122, lng: 15.9734, lore: "Decorated like an old apothecary with sepia photos and brass fixtures. This pub sits near the site where the city's first public pharmacies operated. It is one of the best spots to find premium Irish whiskeys and British-style ales in a library-like setting." },
-            { id: 7, name: "Bacchus Jazz Bar", lat: 45.8055, lng: 15.9789, lore: "A hidden garden retreat near the Main Station. Named after the Roman god of wine, it’s famous for its tiny courtyard and a lemon tree. It’s a sanctuary for artists and jazz lovers, capturing the 1920s intellectual vibe of Zagreb." },
-            { id: 8, name: "Valhalla Beer Bar", lat: 45.8144, lng: 15.9750, lore: "The heavy metal heart of Zagreb's craft scene. While the theme is Viking/Norse, the selection is purely top-tier local craft. It’s known for serving the strongest IPAs in town and being the gateway to the 'Radićeva' bar crawl." },
-            { id: 9, name: "The Beertija", lat: 45.8071, lng: 15.9774, lore: "Famous for its 'Rock Star' terrace featuring statues of rock legends like Lemmy and Joe Strummer. Located in a courtyard near the Pavilion, it offers one of the largest bottled beer selections in the country." },
-            { id: 10, name: "Blato", lat: 45.8118, lng: 15.9702, lore: "Part of the legendary 'Bermuda Triangle' of Zagreb bars in the 80s (along with Kavkaz and Zvečka). It was the gathering point for the 'Novi Val' (New Wave) musicians and artists. It still maintains a traditional Dalmatian 'konoba' feel in the center of the city." }
-        ];
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        const cubeContainer = document.getElementById('cube-container');
+        const flashOverlay = document.getElementById('flash-overlay');
+        const heroSpans = document.querySelectorAll('.scanned-text, .hero-subline');
+        const scannedTitles = document.querySelectorAll('.scanned-text');
+        const description = document.querySelector('.hero-description');
+        const cards = document.querySelectorAll('.modest-card');
+        const hoverTargets = document.querySelectorAll('.hover-target');
+        const upcomingBtnContainer = document.querySelector('.upcoming-btn-container');
+        
+        let particles = [];
+        let globalRays = [];
+        let isTargeting = false;
+        let isDestroying = false;
+        let targetingInterval = null;
+        const PRISM_COLORS = ['#ff4d4d', '#ffd11a', '#33ff77', '#3399ff'];
+        let colorIndex = 0;
 
-        let isUnlocked = localStorage.getItem('zg_pub_unlocked') === 'true';
-        let activeId = null;
-        let userCoords = null;
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
-        function init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('success') === 'true') {
-                isUnlocked = true;
-                localStorage.setItem('zg_pub_unlocked', 'true');
-                window.history.replaceState({}, document.title, window.location.pathname);
+        class Particle {
+            constructor(x, y, color, speedMult = 1) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = (Math.random() - 0.5) * 4 * speedMult;
+                this.speedY = (Math.random() - 0.5) * 4 * speedMult;
+                this.color = color;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.01;
             }
-
-            if (!isUnlocked) {
-                document.getElementById('paywall').classList.remove('hidden');
-            } else {
-                document.getElementById('main-content').classList.remove('hidden');
-                renderList();
-                startGPS();
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = Math.max(0, this.life);
+                ctx.fillRect(this.x, this.y, this.size, this.size);
             }
         }
 
-        function renderList() {
-            const list = document.getElementById('pub-list');
-            list.innerHTML = '';
-            PUBS.forEach(pub => {
-                const card = document.createElement('div');
-                card.className = "glass-card p-5 flex justify-between items-center cursor-pointer transition-transform active:scale-95";
-                card.onclick = () => showLore(pub);
-                card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500 font-black text-xs">
-                            ${pub.id}
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-white">${pub.name}</h3>
-                            <button onclick="event.stopPropagation(); startTracking(${pub.id})" class="text-[10px] text-amber-500 font-black uppercase tracking-widest mt-0.5">Start Navigation</button>
-                        </div>
-                    </div>
-                    <span class="text-slate-600">→</span>
-                `;
-                list.appendChild(card);
+        class GlobalRay {
+            constructor(x, color) {
+                this.x = x;
+                this.color = color;
+                this.life = 1.0;
+                this.width = Math.random() * 0.5 + 0.1;
+            }
+            update() { this.life -= 0.02; }
+            draw() {
+                ctx.strokeStyle = this.color;
+                ctx.globalAlpha = Math.max(0, this.life * 0.3);
+                ctx.lineWidth = this.width;
+                ctx.beginPath();
+                ctx.moveTo(this.x, 0);
+                ctx.lineTo(this.x, canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function createLaser(startX, startY, endX, endY, isGreen = false) {
+            const laser = document.createElement('div');
+            laser.className = 'laser-visual' + (isGreen ? ' laser-target' : '');
+            const dist = Math.hypot(endX - startX, endY - startY);
+            const angle = Math.atan2(endY - startY, endX - startX);
+            
+            laser.style.width = dist + 'px';
+            laser.style.left = startX + 'px';
+            laser.style.top = startY + 'px';
+            laser.style.transform = `rotate(${angle}rad)`;
+            
+            const thickness = Math.random() * 4 + 1;
+            laser.style.height = thickness + 'px';
+            
+            document.body.appendChild(laser);
+            setTimeout(() => laser.remove(), 60);
+
+            for(let i=0; i<3; i++) {
+                particles.push(new Particle(endX, endY, isGreen ? '#33ff77' : '#ff0000', 3));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            globalRays.forEach((ray, i) => {
+                ray.update(); ray.draw();
+                if(ray.life <= 0) globalRays.splice(i, 1);
             });
-        }
 
-        function startTracking(id) {
-            activeId = id;
-            const pub = PUBS.find(p => p.id === id);
-            document.getElementById('active-name').innerText = pub.name;
-            document.getElementById('active-panel').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            updateDistance();
+            particles.forEach((p, i) => {
+                p.update(); p.draw();
+                if(p.life <= 0) particles.splice(i, 1);
+            });
+            
+            requestAnimationFrame(animate);
         }
+        animate();
 
-        function stopTracking() {
-            activeId = null;
-            document.getElementById('active-panel').classList.add('hidden');
-        }
+        // Destruction Interaction logic (Restored)
+        cubeContainer.addEventListener('click', () => {
+            if (isDestroying || isTargeting) return;
+            isDestroying = true;
+            
+            document.body.classList.add('destroy-mode');
+            cubeContainer.classList.add('paused');
+            
+            const rect = cubeContainer.getBoundingClientRect();
+            const startX = rect.left + rect.width / 2;
+            const startY = rect.top + rect.height / 2;
 
-        function startGPS() {
-            if (!navigator.geolocation) return;
-            navigator.geolocation.watchPosition(
-                (pos) => {
-                    userCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    document.getElementById('gps-status').innerText = `GPS: ACTIVE (±${Math.round(pos.coords.accuracy)}m)`;
-                    updateDistance();
-                },
-                () => { document.getElementById('gps-status').innerText = "GPS: ERROR (Permissions?)"; },
-                { enableHighAccuracy: true }
-            );
-        }
+            // Phase 1: Fire Red Lasers at Title
+            const destroyInterval = setInterval(() => {
+                heroSpans.forEach(el => {
+                    el.classList.add('is-disintegrating');
+                    const elRect = el.getBoundingClientRect();
+                    const targetX = elRect.left + Math.random() * elRect.width;
+                    const targetY = elRect.top + Math.random() * elRect.height;
+                    createLaser(startX, startY, targetX, targetY, false);
+                });
+                upcomingBtnContainer.style.opacity = '0';
+                description.style.opacity = '0.1';
+            }, 70);
 
-        function updateDistance() {
-            if (!userCoords || !activeId) return;
-            const pub = PUBS.find(p => p.id === activeId);
-            const dist = haversine(userCoords.lat, userCoords.lng, pub.lat, pub.lng);
-            document.getElementById('dist-val').innerText = `${Math.round(dist)}m`;
-            const progress = Math.max(0, Math.min(100, 100 - (dist / 10))); 
-            document.getElementById('dist-bar').style.width = `${progress}%`;
-        }
+            // Phase 2: Screen Flash and Fade
+            setTimeout(() => {
+                clearInterval(destroyInterval);
+                heroSpans.forEach(el => el.style.opacity = '0');
+                description.style.opacity = '0';
+                
+                // Burst of particles
+                for(let i = 0; i < 200; i++) {
+                    particles.push(new Particle(window.innerWidth/2, window.innerHeight/2, PRISM_COLORS[i%4], 15));
+                }
+                
+                flashOverlay.classList.add('do-flash');
+            }, 2000);
 
-        function haversine(lat1, lon1, lat2, lon2) {
-            const R = 6371e3;
-            const dLat = (lat2-lat1)*Math.PI/180;
-            const dLon = (lon2-lon1)*Math.PI/180;
-            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        }
+            // Phase 3: Restoration
+            setTimeout(() => {
+                document.body.classList.remove('destroy-mode');
+                cubeContainer.classList.remove('paused');
+                flashOverlay.classList.remove('do-flash');
+                heroSpans.forEach(el => {
+                    el.classList.remove('is-disintegrating');
+                    el.style.opacity = '';
+                });
+                description.style.opacity = '';
+                upcomingBtnContainer.style.opacity = '';
+                isDestroying = false;
+            }, 2800);
+        });
 
-        function showLore(pub) {
-            document.getElementById('modal-title').innerText = pub.name;
-            document.getElementById('modal-lore').innerText = pub.lore;
-            document.getElementById('lore-modal').classList.remove('hidden');
-        }
+        // Hover Laser Logic
+        hoverTargets.forEach(target => {
+            target.addEventListener('mouseenter', () => {
+                if (isDestroying) return;
+                isTargeting = true;
+                cubeContainer.classList.add('paused');
+                document.querySelector('.spectrum-array').style.opacity = '0';
+                
+                targetingInterval = setInterval(() => {
+                    const pixelRect = cubeContainer.getBoundingClientRect();
+                    const targetRect = target.getBoundingClientRect();
+                    
+                    const startX = pixelRect.left + pixelRect.width / 2;
+                    const startY = pixelRect.top + pixelRect.height / 2;
+                    
+                    const targetX = targetRect.left + Math.random() * targetRect.width;
+                    const targetY = targetRect.top + Math.random() * targetRect.height;
+                    
+                    createLaser(startX, startY, targetX, targetY, true);
+                }, 50);
+            });
 
-        function closeLore() {
-            document.getElementById('lore-modal').classList.add('hidden');
-        }
+            target.addEventListener('mouseleave', () => {
+                isTargeting = false;
+                clearInterval(targetingInterval);
+                if (!isDestroying) {
+                    cubeContainer.classList.remove('paused');
+                    document.querySelector('.spectrum-array').style.opacity = '1';
+                }
+            });
+        });
 
-        window.onload = init;
+        // Background Logic
+        setInterval(() => {
+            const rect = cubeContainer.getBoundingClientRect();
+            const cubeX = rect.left + rect.width / 2;
+            const activeColor = PRISM_COLORS[Math.floor(Date.now() / 800) % PRISM_COLORS.length];
+
+            if (!cubeContainer.classList.contains('paused')) {
+                globalRays.push(new GlobalRay(cubeX, activeColor));
+            }
+
+            scannedTitles.forEach((span, idx) => {
+                const spanRect = span.getBoundingClientRect();
+                const distance = Math.abs(cubeX - (spanRect.left + spanRect.width/2));
+                if (distance < 150) {
+                    const intensity = 1 - (distance / 150);
+                    const color = PRISM_COLORS[idx % PRISM_COLORS.length];
+                    span.style.color = color;
+                    span.style.textShadow = `0 0 ${15 * intensity}px ${color}`;
+                } else {
+                    span.style.color = '';
+                    span.style.textShadow = '';
+                }
+            });
+
+            cards.forEach((card, index) => {
+                const cardRect = card.getBoundingClientRect();
+                if (cubeX >= cardRect.left && cubeX <= cardRect.right) {
+                    const cycleColor = PRISM_COLORS[index % PRISM_COLORS.length];
+                    card.style.borderColor = cycleColor;
+                    const dot = card.querySelector('.dot-indicator');
+                    dot.style.background = cycleColor;
+                    dot.style.boxShadow = `0 0 10px ${cycleColor}`;
+                } else {
+                    card.style.borderColor = '';
+                    const dot = card.querySelector('.dot-indicator');
+                    dot.style.background = '';
+                    dot.style.boxShadow = '';
+                }
+            });
+        }, 30);
+
+        document.addEventListener('mousemove', (e) => {
+            if (isTargeting || isDestroying) return;
+            for(let i = 0; i < 2; i++) {
+                particles.push(new Particle(e.clientX, e.clientY, PRISM_COLORS[Math.floor(colorIndex)%4]));
+                colorIndex += 0.05;
+            }
+        });
     </script>
 </body>
 </html>
-
-```
